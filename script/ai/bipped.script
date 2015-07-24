@@ -1,0 +1,464 @@
+//this file is GPLv3
+
+object ai_bipped : ai_npc {
+
+    boolean CAN_COMBAT;
+
+    float   health;
+    float   old_health;
+
+    float   Teleports;              // acts like a boolean but can be more than 1 so you can select what kind of teleport effect
+    boolean Patient;                // he won't be awakened until it's activated
+    boolean no_Hurt_Activate;       // he won't activate if he is hurt
+    boolean Silent;                 // he won't say anything when awakened
+    boolean Hidden;                 // he remains hidden until activated
+    boolean no_Activate_Feedback;   // when activated doesn't play a sight animation
+    float   deaf;                   // he can't hear other monsters
+    float   blind;                  // he won't see any enemy until awakened
+
+    float   spawn_time;             // time at which it spawned
+
+    void    t_mat_fx_start();       // the thread that controls the material effect at the start
+    float   mat_fx_start_control;
+
+    void    t_mat_fx_mid();         // the thread that controls the material effect at mid term
+    float   mat_fx_mid_control;
+    
+    void    t_mat_fx_end();         // the thread that controls the material effect at the end
+    float   mat_fx_end_control;
+
+    float   mat_fx_start_time;      // time at which the spawn shader effect should finish (in a monster made of lava, the time it solidifies)
+    boolean no_mat_fx_start;        // wether we should take into account a shader effect
+    boolean mat_fx_start_activated; // wether we should play the shader effect (if any) at spawn time or at activate time
+    float   mat_fx_start_value;     // the actual value passed to the material
+
+    float   legs_deviation;         // from -360 to 360
+    float   tors_deviation;
+    float   head_deviation;
+
+    void    anim_leg_idle();
+    void    anim_leg_inert();
+    void    anim_leg_in_air;        // the animations when he is not on ground
+    void    anim_leg_special_anim ( string anim_name ); // a function for a user specified animation
+
+    void    anim_leg_walk_forward();
+    void    anim_leg_walk_backward();
+    boolean CAN_STEP;
+    void    anim_leg_step_forward();
+    void    anim_leg_step_backward();
+    boolean CAN_RUN;
+    void    anim_leg_run_forward();
+    void    anim_leg_run_backward();
+
+    void    anim_leg_turn_left();
+    void    anim_leg_turn_right();
+
+    boolean CAN_STRAFE;
+    void    anim_leg_step_left();
+    void    anim_leg_step_right();
+    void    anim_leg_run_left();    //strafe
+    void    anim_leg_run_right();   //strafe
+
+    boolean CAN_CROUCH;
+    void    anim_leg_crouched_idle;
+
+    void    anim_leg_crouched_forward;
+    void    anim_leg_crouched_backward;
+    void    anim_leg_crouched_left;
+    void    anim_leg_crouched_right;
+
+    boolean CAN_JUMP;
+    void    anim_leg_jump;
+    void    anim_leg_jump_run;
+    void    anim_leg_land;
+    void    anim_leg_land_hard;
+    void    anim_leg_land_run;
+
+    void    anim_torso_idle();
+    void    anim_torso_pain();
+    float   nextpainlimiter;
+    float   custom_blend_out;
+    void    anim_torso_custom();
+    void    anim_torso_custom_cycle();
+
+    void    init();
+    void    clear();
+    void    destroy();
+
+//    void    state_Spawn(); // play an animation for the start an setup any starting effect
+    void    state_Failed(); // before diying when bleeding, burning, electrocuted, drowning
+    void    state_Dead(); // before destroying it
+    void    state_No_Goal(); //search for a goal or an enemy
+    void    state_Routine_Combat();
+    void    state_Routine_Path();
+    //void    state_Displace(); // walk / run / step unless we have to stop, or we have to manuver
+    //void    state_Stop(); // get the next goal in a series
+    //void    state_Manuvering(); //turning and crouching
+    void    state_Talk();
+    void    state Action(); // action to keep doing
+    void    state_Action_Special(); // special action for a given time
+
+    // play custom animations
+    void    play_aniamtion( string anim, float blend_in, float blend_out, boolean cycle );
+
+    void    set_pain(); //leads to the effects of being hit
+    float   next_pain;    //next time it will play a pain anim
+
+    // optional aniamtions
+    string  animation_spawn;
+    string  animation_sight;
+    string  animation_teleport;
+    string  animation_special;
+
+    //checks
+    boolean check_path_goal();
+    
+    entity  path_goal;
+    entity  enemy_goal;
+    
+};
+
+void ai_bipped::anim_torso_idle() {
+    idleAnim( ANIMCHANNEL_TORSO, "idle" );
+
+    while ( true ) {
+        if ( AI_PAIN ) {
+            animState( ANIMCHANNEL_TORSO, "anim_torso_pain", 3 );
+        }
+
+        waitFrame();
+    }
+}
+
+void ai_bipped::anim_torso_pain() {
+    //make a sound every time he get's pain?¿?¿? or this should be rleated to the animation itself?
+    playAnim( ANIMCHANNEL_TORSO, getPainAnim() ); // this selects the pain animd epending on the bone hit
+
+    nextpainlimiter = sys.getTime() + 0.25; //TODO this is completely arbitrary (i guess it's rleated to the time the animation leasts )
+
+    while( true ) {
+        if ( !animDone( ANIMCHANNEL_TORSO, 3 ) && AI_PAIN ) {
+            if ( sys.getTime() > nextpainlimiter ) {
+                animState( ANIMCHANNEL_TORSO, "anim_torso_pain", 8 ); // let's go back to the start of pain in a new pain anim
+            }
+        }
+        waitFrame();
+
+    }
+    animState( ANIMCHANNEL_TORSO, "anim_torso_idle", 8 );
+}
+
+void ai_bipped::anim_torso_custom() {
+    while( true ) {
+        if ( !animDone( ANIMCHANNEL_TORSO, custom_blend_out ) ) {
+            finishAction( "animation_custom" );
+            break;
+        }
+        waitFrame();
+    }
+    animState( ANIMCHANNEL_TORSO, "anim_torso_idle", custom_blend_out );
+}
+
+void ai_bipped::anim_torso_custom_cycle() {
+    eachFrame {
+        ; //is this the same as pass in python?
+    }    
+}
+
+void ai_bipped::play_animation( string anim, float blend_in, float blend_out, boolean cycle ){
+    custom_blend_out = blend_out;
+
+    overrideAnim( ANIMCHANNEL_LEGS );
+    if ( cycle ) {
+        animState( ANIMCHANNEL_TORSO, "anim_torso_custom_cycle", blend_in );
+        playCycle( ANIMCHANNEL_TORSO, anim );        
+    } else {
+        animState( ANIMCHANNEL_TORSO, "anim_torso_custom", blend_in );
+        playAnim( ANIMCHANNEL_TORSO, anim );        
+    }
+
+}
+
+void ai_bipped::t_mat_fx_start( float attack_time, float hold_time, float release_time, float mat_parm) {
+    float threadIdNum;
+    threadIdNum = mat_fx_start_control;
+
+    change_mat_over_time( self, attack_time, hold_time, release_time, mat_parm);
+
+    //let's kill that thread gracefully and in a way it can be detected as finished from outside the thread
+    mat_fx_start_control = 0;
+    sys.terminate( threadIdNum );
+}
+
+void ai_bipped::t_mat_fx_mid( float attack_time, float hold_time, float release_time, float mat_parm) {
+    float threadIdNum;
+    threadIdNum = mat_fx_mid_control;
+
+    change_mat_over_time( self, attack_time, hold_time, release_time, mat_parm);
+
+    //let's kill that thread gracefully and in a way it can be detected as finished from outside the thread    
+    mat_fx_mid_control = 0;
+    sys.terminate( threadIdNum );
+}
+
+void ai_bipped::state_Routine_Combat() {
+    entity new_enemy;
+    while( true ) {
+        sys.waitFrame();
+    }
+}
+
+void ai_bipped::state_Routine_Path() {
+    entity next_path;
+    while( true ) {
+        sys.waitFrame();
+    }
+}
+
+void ai_bipped::check_path_goal() {
+    entity goal;
+
+    goal = self.getTarget(1);
+
+    if ( goal ) {
+        if ( goal.getKey("spawnclass") == "idPathCorner" ) {
+            path_goal = goal;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void ai_bipped::set_pain() {
+    float delta_health, current_time
+
+    old_health = health;
+    health = self.getHealth();
+    delta_health = delta ( health, old_health );
+
+    AI_ACTIVATE = true;
+
+    sys.println( "$" + self.getKey( "name" ) + ": my health is: " + health );
+
+    current_time = getTime();
+    if ( current_time > next_pain ){
+        next_pain = current_time + 4;
+        // play anim depending on delta_health and health
+    }
+}
+
+void ai_bipped::state_No_Goal() {
+    boolean follow_path;
+    boolean got_enemy;
+
+    //get a goal
+        //if we have a path_corner we have a routine
+        //if we have an enemy we have a routine
+            //if we have an old enemy we have an enemy
+            //if we find a new enemy we have an enemy
+
+    while( true ) {
+
+        if ( AI_TALK ) {
+            // what does it does when activated?
+        }
+
+        if ( AI_PUSHED ) {
+            // whats does it does when pushed?
+        }
+
+        if ( AI_PAIN ) {
+            set_pain();
+            
+            // we have to get the pain inflictor!
+        }
+
+        // let's check if we have a path assigned
+
+        if ( !follow_path ) {
+            if ( check_path_goal() ) {
+                follow_path = true;
+            } else {
+                follow_path = false;
+            }
+        }
+
+        // combat start
+
+        if ( can_combat ) {
+
+            if ( !AI_ACTIVATED ) {
+                if ( check_senses() {
+                    AI_ACTIVATED = true;
+                } else {
+                    AI_ACTIVATED = false;
+                }
+            }       
+
+            if ( AI_ACTIVATED ) {
+                if ( no_mat_fx_start == false ) {
+                    if ( mat_fx_start_activated ) {
+                        show();
+                        if ( !mat_fx_start_control ) { // in case we screwed up
+                            mat_fx_start_control = thread t_mat_fx_start( 0, 0, mat_fx_start_time, 8); // starts the shader effect
+                        } else {
+                            //not necessary but, print a warning
+                        }
+                    }
+                }
+
+                if ( no_Activate_Feedback ) {
+                    //go directly to the activated state and don't play the sight animation
+                    setNextState( "state_Routine_Combat" );
+                }
+
+                play_animation( animation_sight, 0, 4, false );
+                waitAction( "animation_custom" );
+                setNextState( "state_Routine_Combat" );
+            }
+        } else {
+            // can't combat
+            //what does an NPC do when activated?
+        } 
+
+        if ( follow_path ) {
+            setNextState( "state_Routine_Path" );
+        }
+
+        sys.waitFrame();
+    }
+
+}
+/*
+void ai_bipped::state_Spawn() {
+    // remember this is an animation only stage that plays when the entity is created
+    // this also initiates any material effect that initiates with the spawn like hidding the model.
+
+    // do the animation and wait for it to finish
+
+    if ( Silent ) {
+        // put the silent waiting animation
+    } else {
+        // do the spawn aniamtion
+        while ( animeationfinished ) {
+            waitFrame();
+        }
+    }
+
+    setNextState( "state_no_goal" );
+    
+}
+*/
+
+void ai_bipped::clear() {
+    //terminate any possible active thread
+    if ( mat_fx_start_control ) {
+		sys.terminate( mat_fx_start_control );
+		mat_fx_start_control = 0;
+	}
+    
+    if ( mat_fx_mid_control ) {
+		sys.terminate( mat_fx_mid_control );
+		mat_fx_mid_control = 0;
+	}
+
+    if ( mat_fx_end_control ) {
+		sys.terminate( mat_fx_end_control );
+		mat_fx_end_control = 0;
+	}
+}
+
+void ai_bipped::destroy() {
+    clear();
+}
+
+void ai_bipped::init() {
+
+    //gather spawnargs from the entity
+
+    health = self.getHealth();
+
+    Teleports = getIntKey( "teleports" );               //so it defaults to not being teleported
+
+    Hidden = true;
+    if ( getIntKey( "hidden" ) <= 0 ) {                 //so it defaults to not being hidden
+        Hidden = false;
+    }
+
+    Silent = true;
+    if ( getIntKey( "silent" ) <= 0 ) {                 //so it defaults to not making ambushes
+        Silent = false;
+    }
+
+    Patient = true;
+    if ( getIntKey( "patient" ) <= 0 ) {                //so it defaults to activate when seeing the player, hearing him, be triggered, or other pulses
+        Patient = false;
+    }
+
+    no_Hurt_Activate = true;
+    if ( getIntKey( " no_hurt_activate" ) <= 0 ) {      //so it defaults to be activated when hurt
+         no_Hurt_Activate = false;
+    }    
+
+    no_Activate_Feedback = true;
+    if ( getIntKey( "no_activate_feedback" ) <= 0 ) {   //so it defaults to making sight animations
+        no_Activate_Feedback = false;
+    }
+
+    deaf = getFloatKey( "deaf" ); // distance limit at which he listens, expressed in game units, 0 means it's not deaf at all
+    blind = getFloatKey( "blind" ); // distance limit at which he sees, expressed in game units, 0 means it's not blind at all
+
+    spawn_time = sys.getTime(); // we might not need that
+
+    mat_fx_start_activated = true;
+    if ( getIntKey( "mat_fx_start_activated" ) <= 0 ) {   //so it defaults to making the shader effect (if any) when spawned, 
+                                                           //this also means it will stay hidden until then
+        mat_fx_start_activated = false;
+    }
+
+    no_mat_fx_start = true;
+    mat_fx_start_time = getFloatKey( "mat_fx_start_time" ); //the time it takes to complete shader effect
+    if ( mat_fx_start_time > 0 ) {
+        no_mat_fx_start = false;
+    }
+    
+
+    animation_spawn = getKey( "anim_spawn" );
+    aniamtion_sight = getKey( "anim_sight" );
+    animation_special = getKey( "anim_special" );
+    animation_teleport = getKey( "anim_teleport" );
+
+
+    // setup the visual apparence of the npc
+    
+    if ( teleported || hidden ) {
+        hide();
+    } else {
+        if ( no_mat_fx_start == false ) {
+            if ( mat_fx_start_activated ) {
+                hide(); // let's hide it until it's time to start the shader effect at activation time
+            } else {
+                mat_fx_start_control = thread t_mat_fx_start( 0, 0, mat_fx_start_time, 8);
+            }
+        }
+
+        if ( animation_spawn != "" ) {
+            play_animation( animation_spawn, 0, 4, false );
+            waitAction( "animation_custom" );
+        }
+    }
+
+    setNextState( "state_No_Goal" );
+
+        //if he is teleported or hidden - done
+            // hide him - done
+        //else if we have a spawn animation -done
+            // perform the shader effect if it is needed or it's the correct time - done
+            // else hide him - done
+            //else perform it
+                //wait for it to finish         
+        
+    // go to no goal state
+
+}

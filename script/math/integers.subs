@@ -1,0 +1,27 @@
+// this file is GPLv3
+
+// every math function that involves integers
+
+// utilities
+float inverse( float number ){
+    return number * -1;
+}
+
+float delta( float max, float min ){
+    return max - min;
+}
+
+//functions
+float absolute( float number ){
+    if ( number < 0 ) {
+        number = inverse( number );
+    }
+
+    return number;
+}
+
+float intRandom( float number ){
+    return int( sys.random( number ) );
+}
+
+

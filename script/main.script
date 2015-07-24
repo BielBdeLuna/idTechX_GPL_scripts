@@ -1,0 +1,26 @@
+// this file is GPLv3
+
+// this is the main script file that links every script
+
+// common includes
+
+#include "defs.globals"
+//#include "script/def_engine.globals"
+//#include "script/def_game.globals"
+#include "script/events.script"
+//#include "script/events_engine.script"
+//#include "script/events_game.script"
+
+#include "script/maths.include"
+
+#include "script/ai.include"
+
+void main_func() {
+	sys.print( "started main_func()\n");
+	// this is called at the start of every map besides the other map's script
+	sys.print( "ended fain_func()\n" );
+}
+
+
+
+

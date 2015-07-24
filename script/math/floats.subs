@@ -1,0 +1,28 @@
+// this file is GPLv3
+     //////////////////////////////////////////////////////////////////
+    //      return a normalized value between a min and a max       //
+   //////////////////////////////////////////////////////////////////
+
+float minNormalizeMax(float number, float max, float min ) {
+
+    float interval;
+    float incorporated;
+    float value;
+
+    interval = max - min;
+    incorporated = number - min;
+
+    if ( incorporated <= 0 ) {
+        value = 0;
+    } else {        
+        value = ( 1/interval ) * incorporated;
+    }
+    //sys.print( "value is: " + value + "\n" );
+    return value;
+
+}
+
+// returns the remainder of a normalized magnitude (only works for magnitudes between 0.0 and 1.0)
+float invertNormalizedMagnitude( float magnitude ) {
+    return 1 - magnitde;
+}

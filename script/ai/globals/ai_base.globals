@@ -1,0 +1,27 @@
+//this file is GPLv3
+
+#define STANDARD_BLEND_TIME             4 // frames
+
+// movetypes any non_player character can have
+
+#define MOVETYPE_DEAD					0
+#define MOVETYPE_ANIM					1
+#define MOVETYPE_SLIDE					2
+#define MOVETYPE_FLY					3
+#define MOVETYPE_STATIC					4
+#define MOVETYPE_SWIM                   5
+
+//space
+#define POS_SPACE_REACHABLE             0 // we can walk there (there is AAS data)
+#define POS_SPACE_SPECIAL_REACHABLE     1 // we can get there in a special way (by crouching in tight spaces)
+#define POS_SPACE_UNREACHABLE           2 // we can't get there, but we could be physically there (spot without AAS data)
+#define POS_SPACE_INVALID               3 // we can't be physically there ( like inside a wall ) 
+#define POS_SPACE_VALID_MEDIUM          4 // we could enter water there, or get out of it there TODO add a way to check the medium in a specified pos
+#define POS_SPACE_DANGEROUS_MEDIUM      5 // there is no ground there, or we could enter lava there
+
+//relationships
+
+#define TALK_NEVER						0
+#define TALK_DEAD						1
+#define TALK_OK							2
+#define TALK_BUSY						3

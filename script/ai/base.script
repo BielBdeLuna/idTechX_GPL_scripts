@@ -1,0 +1,38 @@
+//this file is GPLv3
+
+object ai_base {
+
+// c++ inputs
+
+    boolean     AI_ACTIVATED;
+
+// physicalty
+    boolean     AI_DEAD;
+    boolean     AI_ONGROUND;
+    boolean     AI_PAIN;
+
+//  movement
+    boolean     AI_FORWARD;
+    boolean     AI_JUMP;
+    boolean     AI_MOVE_DONE;
+
+// goal
+    boolean     AI_BLOCKED;
+    boolean     AI_OBSTACLE_IN_PATH;
+    boolean     AI_DEST_UNREACHABLE;
+
+// combat
+    boolean     AI_DAMAGE;
+    float       AI_SPECIAL_DAMAGE;
+    boolean     AI_ENEMY_VISIBLE;
+    boolean     AI_ENEMY_IN_FOV;
+    boolean     AI_ENEMY_DEAD;
+    boolean     AI_HIT_ENEMY;
+
+//interaction
+    boolean     AI_TALK;
+    boolean     AI_PUSHED;
+
+    float       move_speed;     //current speed
+    float       move_type;      //current move style ( so a monster can swim, fly, walk or everything )
+};

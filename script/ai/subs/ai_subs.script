@@ -1,0 +1,199 @@
+// this file is GPLv3
+
+
+// an easy subroutine that makes easier to understand where the whole entity is
+
+vector my_position() {
+    return self.getWorldOrigin();
+}
+
+// global direction of the whole entity given in degrees (obiously 0 - 360 degrees range)
+float my_compass_direction() {
+    return vectoangle_compass_direction( self.getAngles() );
+}
+
+// returns the relative direction between the entity direction and a given angle, returns it in a 180 to -180 range
+float relative_dir_to_me( float angle ) {
+    angle = anglemod_360( angle );
+    float dir = my_compass_direction();
+    return delta( angle, dir );
+}
+
+
+void change_mat_over_time( entity host, float attack_time, float hold_time, float release_time, float mat_parm) {
+    float time_portion_attack, time_portion_hold, time_portion_release,
+          value_portion_attack, value_portion_release, 
+          mat_parm_value;
+    float current_time = 0.0;
+
+    // that's for protection, let's not fuck it up here with strange negative numbers
+    attack_time = absolute( attack_time );
+    hold_time = absolute( hold_time );
+    release_time = absolute( release_time );
+
+    //this sets the time portions for every part of the effect
+    time_portion_attack = attack_time / GAME_FRAMETIME;
+    time_portion_hold = hold_time / GAME_FRAMETIME;
+    time_portion_release = release_time / GAME_FRAMETIME;
+
+    //this sets the increments per time_frame, from 0.0 to 1.0, and protects agains a divide by zero situation
+    //there is no increment in hold because the effect doesn't change in that time.
+    value_portion_attack = 0;
+    if ( attack_time > 0 ) {
+        value_portion_attack = 1 / attack_time;
+    }
+
+    value_portion_release = 0;
+    if ( attack_time > 0 ) {
+        value_portion_release = 1 / release_time;
+    }
+
+    //let's define a start point of the mat_parm_value taking into account the availability of three parts of the effect
+    if ( attack_time == 0 ) {
+        mat_parm_value = 1;
+    } else {        
+        mat_parm_value = 0;
+    }
+
+    // the actual effect in motion
+    while ( current_time <= ( attack_time + hold_time + release_time ) ) {
+        host.setShaderParm(mat_parm, mat_parm_value); // this changes the material every frame the effect is active
+
+        if ( ( attack_time > 0 ) && ( current_time <= attack_time ) ) {
+            mat_parm_value += value_portion_attack;
+
+            if ( mat_parm_value > 1 ) {
+                 mat_parm_value = 1; //let's polish the results
+            }
+
+            current_time += portion_attack;
+        } else if ( ( hold_time > 0 ) && ( current_time > ( attack_time ) ) && ( current_time <= ( attack_time + hold_time ) ) ) {
+            mat_parm_value = 1; // the mat_parm_value doesn't change here
+            current_time += portion_hold; 
+        } else if ( release_time > 0 ) {
+            mat_parm_value -= value_portion_release;
+            current_time += portion_release;
+        }
+
+        waitFrame();
+    }
+
+    //let's polish the results
+    if ( release_time > 0 ) {
+        host.setShaderParm(mat_parm, 0);
+    }
+}
+
+void material_remixer (entiy host, float mat_parm, float initial_value ) {
+    float mat_parm_value = initial_value;
+    float effect_pct = 1; // full percentage
+    float abs_change_pct = 0.01;    
+    float mat_fx_play;
+    float mat_fx_forward;
+    float mat_fx_backward;
+    float mat_fx_accel;
+    float mat_fx_deccel;
+    boolean MAT_FX_PLAY;
+    boolean MAT_fx_FORWARD;
+    boolean MAT_fx_BACKWARD;
+    boolean MAT_fx_ACCEL;
+    boolean MAT_fx_DECCEL;
+
+    while ( true ) {
+
+        //let's see the current state of the booleans
+        mat_fx_play     = host.getFloatKey( "MAT_FX_PLAY" );
+        mat_fx_forward  = host.getFloatKey( "MAT_FX_FORWARD" );
+        mat_fx_backward = host.getFloatKey( "MAT_FX_BACKWARD" );
+        mat_fx_accel    = host.getFloatKey( "MAT_FX_ACCEL" );
+        mat_fx_deccel   = host.getFloatKey( "MAT_FX_DECCEL" );
+
+        if ( mat_fx_play == 1 ) {
+            MAT_FX_PLAY = true;
+        } else {
+            MAT_FX_PLAY = false;
+        }
+
+        if ( mat_fx_forward == 1 ) {
+            MAT_FX_FORWARD = true;
+        } else {
+            MAT_FX_FORWARD = false;
+        }
+
+        if ( mat_fx_backward == 1 ) {
+            MAT_FX_BACKWARD = true;
+        } else {
+            MAT_FX_BACKWARD = false;
+        }
+
+        if ( mat_fx_accel == 1 ) {
+            MAT_FX_ACCEL = true;
+        } else {
+            MAT_FX_ACCEL = false;
+        }
+
+        if ( mat_fx_deccel == 1 ) {
+            MAT_FX_DECCEL = true;
+        } else {
+            MAT_FX_DECCEL = false;
+        }
+
+        //now let's play with the booleans
+        if ( MAT_FX_PLAY ) { // the inverse would be equivalent to a pause in the effect
+
+            if ( MAT_FX_FORWARD ) {
+                if ( effect_pct < 0 ) {
+                    effect_pct * -1;
+                }
+            } else if ( MAT_FX_BACKWARD ) {
+                if ( effect_pct > 0 ) {
+                    effect_pct * -1;
+                }
+            }
+
+            if ( MAT_ACCEL ) {
+                effect_pct += abs_change_pct;
+            } else if ( MAT_DECCEL ) {
+                effect_pct -= abs_change_pct;
+            } else if ( !MAT_DECCEL && !MAT_ACCEL ) {
+                effect_pct = 1;
+            }
+
+            mat_parm_value *= effect_pct; // this increments the value multipliying itself with the percentage
+        }     
+
+        host.setShaderParm(mat_parm, mat_parm_value);
+        sys.waitFrame();
+    }
+
+}
+void mat_fx_play( entity host )     = { 
+    host.setKey( "MAT_FX_PLAY", "1" ); 
+    host.setKey( "MAT_FX_ACCEL", "0" ); 
+    host.setKey( "MAT_FX_DECCEL", "0" ); 
+}
+void mat_fx_pause( entity host )    = { host.setKey( "MAT_FX_PLAY", "0" ); };
+void mat_fx_forward( entity host )  = { 
+    host.setKey( "MAT_FX_PLAY", "1" );
+    host.setKey( "MAT_FX_FORWARD", "1" );
+    host.setKey( "MAT_FX_BACKWARD", "0" );
+    host.setKey( "MAT_FX_ACCEL", "0" ); 
+    host.setKey( "MAT_FX_DECCEL", "0" ); 
+}
+void mat_fx_backward( entity host ) = { 
+    host.setKey( "MAT_FX_PLAY", "1" );
+    host.setKey( "MAT_FX_FORWARD", "0" );
+    host.setKey( "MAT_FX_BACKWARD", "1" );
+    host.setKey( "MAT_FX_ACCEL", "0" ); 
+    host.setKey( "MAT_FX_DECCEL", "0" ); 
+}
+void mat_fx_accel( entity host )    = { 
+    host.setKey( "MAT_FX_PLAY", "1" );
+    host.setKey( "MAT_FX_ACCEL", "1" ); 
+    host.setKey( "MAT_FX_DECCEL", "0" ); 
+}
+void mat_fx_deccel( entity host )   = { 
+    host.setKey( "MAT_FX_PLAY", "1" ); 
+    host.setKey( "MAT_FX_ACCEL", "0" ); 
+    host.setKey( "MAT_FX_DECCEL", "1" ); 
+}

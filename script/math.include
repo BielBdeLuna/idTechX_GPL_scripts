@@ -1,0 +1,10 @@
+//this file is GPLv3
+
+#include "script/math/integers.subs"
+#include "script/math/floats.subs"
+#include "script/math/time.subs"
+#include "script/math/booleans.subs"
+#include "script/math/vectors.subs"
+#include "script/math/vectoangles.subs"
+#include "script/math/angles.subs"
+

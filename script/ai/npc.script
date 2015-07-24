@@ -1,0 +1,19 @@
+//this file is GPLv3
+
+object ai_npc : ai_base {
+  
+    boolean CAN_BE_INTERACTED;
+    boolean CAN_TALK;
+    float   interacted;
+
+    float   ent_dir;                // the current compas direction of the entity
+
+    boolean CAN_PUSH;
+    boolean CAN_BE_PUSHED;
+
+    float   push_deviation;         // from -180 to 180, direction the entity was pushed relative to it's compas dir
+
+    vector  current_pos;
+    vector  current_goal_pos;
+
+};

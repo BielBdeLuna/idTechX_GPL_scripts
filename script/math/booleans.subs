@@ -1,0 +1,19 @@
+//this file is GPLv3
+
+// depending on whether if it is actually a limit or a threshold, it checks if a value surpases a threshold or not.
+
+boolean threshold ( boolean limit, float value, float threshold ) {
+    if ( value >= threshold ) {
+        if ( limit ) {
+            return false; //outside the limit or in it.
+        } else {
+            return true; //we've reached the threshold or surpassed it.
+        }
+    }
+
+    if ( limit ) {
+        return true;    //within the limit.
+    } else {
+        return false;   //not yet reached the threshold.
+    }
+}

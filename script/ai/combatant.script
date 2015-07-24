@@ -1,0 +1,13 @@
+// this file is GPLv3
+
+object ai_bipped_combatant : ai_bipped_npc {
+
+    boolean CAN_COMBAT;
+
+    boolean silent;                 // he won't say anything when awakened
+    boolean deaf;                   // he can't hear other monsters
+    boolean blind;                  // he won't see any enemy until awakened
+
+    void    state_combat();
+
+};

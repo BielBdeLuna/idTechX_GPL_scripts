@@ -1,0 +1,7 @@
+//this file is GPLv3
+
+#include "script/ai/subs/subs.script"
+
+//FSM
+#include "script/ai/base.script"
+#include "script/ai/bipped.script"

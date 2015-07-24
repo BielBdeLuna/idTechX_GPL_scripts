@@ -1,0 +1,54 @@
+// this file is GPL v3
+
+// utils for using with float types arround angles
+
+// utilities
+
+float anglemod_max_min ( angle, float max, float min ) {
+    float abs_change = absolute( max - min )
+    while ( angle >= max ) {
+        angle -= abs_change;
+    }
+    while ( angle < min ) {
+        angle += abs_change;
+    }
+    return angle;
+}
+
+// actual functions
+
+float anglemod_360( float angle ) {
+    return anglemod_max_min( angle, 360, 0 );
+
+}
+
+float anglemod_180( float angle ) {
+    return anglemod_max_min( angle, 180, -180 );
+
+}
+
+//returns the global compass direction from a vector
+
+float vector_compass_direction( vector vec ){
+    vector angle = sys.VecToAngles( vec )
+    return angle_z;
+}
+
+//returns the global compass direction from a vector in an angle form factor
+float vectoangle_compass_direction( vector angle ){
+    angle = vectoanglemod_360( angle ) // in case we input strange angles
+    return angle_z;
+}
+
+// returns the relative angle between two angles in a 180 to -180 range
+float relative_angle_180( float ref_angle, float angle ){
+    ref_angle = anglemod_360( ref_angle );
+    angle = anglemod_360( angle );
+    return delta( angle, ref_angle );
+}
+
+// return a randomized angle from a specified range with 0 in the middle
+float randomizeCentredAngle( float range ) {
+    range = absolute( range ); // let's make sure we're using positive numbers
+    return inverse(range / 2) + sys.random( range );
+}

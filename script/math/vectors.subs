@@ -1,0 +1,8 @@
+//this file is GPLv3
+
+boolean check_dir_inverse_alignment ( vector local_dir, vector ref_dir, float threshold ) {
+    return ( sys.vecLength ( local_dir - ref_dir ) < threshold );
+}
+
+
+

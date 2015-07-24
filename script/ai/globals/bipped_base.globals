@@ -1,0 +1,23 @@
+// this file is GPLv3
+
+// speed
+
+#define MOVE_SPEED_STAY                 0
+#define MOVE_SPEED_STEP                 1
+#define MOVE_SPEED_WALK                 2
+#define MOVE_SPEED_RUN                  3
+#define MOVE_SPEED_ANIMATION            4 // no actual speed is choosen (like when jumping)
+
+// movement factor, define diferent movement systems
+
+#define MOVE_FACTOR_NONE                0 // standard movement set
+#define MOVE_FACTOR_CROUCH              1 // crouched aniamtions set(standard movement set only slighty lower)
+#define MOVE_FACTOR_SWIM                2 // swimming movement set
+#define MOVE_FACTOR_SLIDE               3 // sliding movement set
+#define MOVE_FACTOR_ON_AIR              4 // flying movement set
+#define MOVE_FACTOR_CLIMBING            5 // climbing an irregular surface (wait for the future's future for that feature)
+#define MOVE_FACTOR_LADDER              6 // climbing a linear vertical ladder movement set
+
+//#define NPC_TURN_WALKING			65
+//#define STAY_TURN_MIN             10
+#define STAY_TURN_THRESHOLD			45 // when in STAY only init turn if the torso is deviating further than 45 degrees

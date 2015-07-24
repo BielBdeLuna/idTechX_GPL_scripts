@@ -1,0 +1,41 @@
+// this file is GPL v3
+
+// utils for using with vector types defined with angles
+
+// utilities
+vector vectoanglemod_max_min ( vector angle, float max, float min ) {
+    float abs_change = absolute( max - min )
+    while ( angle_x >= max ) {
+        angle_x -= abs_change;
+    }
+    while ( angle_x < min ) {
+        angle_x += abs_change;
+    }
+    while ( angle_y >= max ) {
+        angle_y -= abs_change;
+    }
+    while ( angle_y < min ) {
+        angle_y += abs_change;
+    }
+    while ( angle_z >= max ) {
+        angle_z -= abs_change;
+    }
+    while ( angle_z < min ) {
+        angle_z += abs_change;
+    }
+    return angle;
+}
+
+// actual functions
+
+vector vectoanglemod_360( vector angle ){
+    return vectoanglemod_max_min( angle, 360, 0 );
+}
+
+vector vectoanglemod_180( vector angle ){
+    return vectoanglemod_max_min( angle, 180, -180 );
+}
+
+vector vectorize_angles( vector angle ){
+    return sys.angToForward( angle );
+}
