@@ -2,7 +2,13 @@
 
 object ai_bipped : ai_npc {
 
+    float   ideal_speed;            // speed the npc wants to go
+    float   current_speed;          // speed the npc actually goes
+
     boolean CAN_COMBAT;
+    boolean hooked;                 // whether if he is hooked to the goal (follwing him or not)
+    
+    boolean can_follow_player;      // he get's to the goal which is the player
 
     float   health;
     float   old_health;
@@ -15,6 +21,9 @@ object ai_bipped : ai_npc {
     boolean no_Activate_Feedback;   // when activated doesn't play a sight animation
     float   deaf;                   // he can't hear other monsters
     float   blind;                  // he won't see any enemy until awakened
+    float   default_fov;            // default field of view of the monster
+    float   current_fov;            // current field of view
+    float   focus_distance;         // distance the monster is focusing on, this could be used
 
     float   spawn_time;             // time at which it spawned
 
@@ -87,8 +96,11 @@ object ai_bipped : ai_npc {
 
 //    void    state_Spawn(); // play an animation for the start an setup any starting effect
     void    state_Failed(); // before diying when bleeding, burning, electrocuted, drowning
+    void    state_Insta_Killed();   //
+    void    state_Killed(); //called from the c++
     void    state_Dead(); // before destroying it
     void    state_No_Goal(); //search for a goal or an enemy
+    void    state_Routine_Enquiry(); // search for an unseen enemy in a position layed down by the enemy's sound
     void    state_Routine_Combat();
     void    state_Routine_Path();
     //void    state_Displace(); // walk / run / step unless we have to stop, or we have to manuver
@@ -111,10 +123,22 @@ object ai_bipped : ai_npc {
     string  animation_special;
 
     //checks
-    boolean check_path_goal();
+    boolean check_path_routine();
+    boolean check_sight();
+    boolean check_hearing();
     
     entity  path_goal;
-    entity  enemy_goal;
+    entity  goal;
+    entity  old_goal;
+
+    vector  enquiry_pos;
+
+    // path stuff;
+    
+    boolean check_path_routine();
+    boolean check_path_goal( entity e );
+    void    routine_path_corner();
+
     
 };
 
@@ -204,29 +228,260 @@ void ai_bipped::t_mat_fx_mid( float attack_time, float hold_time, float release_
 void ai_bipped::state_Routine_Combat() {
     entity new_enemy;
     while( true ) {
+        // am I outside the AAS?
+            // simple quake 1 AI --> maybe a taunt state? -TODO devise a non-AAS AI system, maybe with traces?
+            // continue
+
+        // is my enemy outside the AAS?
+            // is enemy visble?
+                // is enemy at meleé reach?
+                    // meleé enemy
+                // else
+                    // taunt
+            // else
+                // simple quake 1 AI --> maybe a taunt state?
+                // maybe activate other unactivated monsters?
+                // maybe keep looking for other monsters?
+                // continue
+        // else
+            // is enemy reachable?
+                // is enemy visible?
+                    // do we range attack the enemy?
+                        // range attack enemy
+                    // else
+                        // is enemy at meleé reach?
+                            // do I meleé enemy?
+                                // melée enemy
+                            // else
+                                // ?
+                        // else
+                            // move towards enemy
+                // else
+                    // chase him
+            // else
+                // call other firends to me so they all see the enemy
+                // taunt
+
+    //          ^^^^ this whole AI is so simple! ^^^^
+    /*
+        combat is a lineal action that might branch according to my capacities an his
+
+        * there should be a following of both the goal capacities as well as my own capacities
+
+        * several strategies should play a part on the combat
+
+        * any strategy is designed to acomplish a goal
+
+        * every strategy is a linear set of actions designed to win over the enemy at every stage
+
+        * the change of strategy only is encessary when the goal of the last startegy is unreachable or the cost of reaching is is too great to bare
+
+        * goals:
+
+            -   lower the health to a percentage quickly.
+            -   gain terrain quiclky
+            -   flank the enmy quickly
+            -   retreat quickly
+
+        * combat, move or move while in combat
+        * check the strategy goal completeness
+    */
+        sys.waitFrame();
+    }
+}
+
+boolean ai_bipped::check_path_goal( entity e ) {
+    entity path = e.randomPath();
+    if ( path ) {
+        goal = path;
+        return true;
+    }
+    return false;
+}
+
+boolean ai_bipped::check_path_routine() {
+    string classname = goal.getKey("classname"); //get the name of the entity's definition (not the entity "name")
+    if ( classname != "" ) {
+        classname = "routine_" + classname;
+        if( self.hasFunction( classname ) {
+            self.callFunction( classname );
+            return true;
+        }
+    }
+    return false;
+}
+
+void ai_bipped::path_get_a_direction( entity path_entity ) {
+    boolean stop_and_turn = true;
+    if ( path_entity.getIntKey ( "stopNturn" ) <= 0 ) {
+        stop_and_turn = false;
+    }
+    float   forcedirection = path_entity.getIntKey( "angle" );
+}
+
+void ai_bipped::path_do_custom_anim( entity path_entity ) {
+    string  animname = path_entity.getKey( "anim" );
+    if ( animname != "" ) {
+        play_animation( animname, 0, 4, false );
+        waitAction( "animation_custom" );
+    }
+}
+
+boolean ai_bipped::chek_path_change_speed( entity path_entity ) {
+    if ( path_entity.getIntKey ( "speedy" ) <= 0 ) {
+        return false;
+    }
+    ideal_speed = MOVE_SPEED_RUN;
+    return true;
+}
+
+void ai_bipped::routine_path_corner {
+    boolean speedy, wait_for_turn, at goal;
+    string anim_name = path_entity.getKey( "anim" );
+    
+    // trigger a pre-trigger
+    while ( true ) {
+        // check for enemies
+
+        if ( at_goal ) {
+            if ( wait_turn ) {
+                // turn
+                sys.waitFrame();
+                continue;
+            }
+
+            if ( animname != "" ) {
+                play_animation( animname, 0, 4, false );
+                waitAction( "animation_custom" );
+            }
+
+            if ( check_path_goal( goal ) ) {                
+                return; // a new goal has been set, let the path routine deal with it
+            } else {
+                setNextState( "state_No_Goal" ); // no new "path_" goal available go back to No_Goal
+            }
+        } else {
+            if ( wait_turn ) {
+                // approach goal
+            } else {
+                //if goal close
+                    //approach and turn
+                //else
+                    //aproach goal
+            
+                //if distance to goal reached
+                    at_goal = true;
+                    sys.waitFrame();
+                    continue;
+            }
+        }
         sys.waitFrame();
     }
 }
 
 void ai_bipped::state_Routine_Path() {
-    entity next_path;
     while( true ) {
-        sys.waitFrame();
+        if ( !check_path_routine() ) {
+            // issue a warning
+            setNextState( "state_No_Goal" );
+        }
     }
 }
 
-void ai_bipped::check_path_goal() {
-    entity goal;
+void ai_bipped::check_senses() {
+    entity ent, enemy, old_enemy;
 
-    goal = self.getTarget(1);
+    if ( ( old_goal.getKey( "spawnclass" ) == ( "idAI" || "idPlayer" ) ) && old_goal.getHealth() > 0 ) {
+        old_enemy = old_goal;
+    } else {
+        old_enemy = NULL;
+    }
 
-    if ( goal ) {
-        if ( goal.getKey("spawnclass") == "idPathCorner" ) {
-            path_goal = goal;
-            return true;
+    //get an entity to play with
+    //  sight
+    ent = findEnemy( current_fov ); // let's find a player
+    if ( ent ) {
+        if ( self. distanceTo( ent ) <= blind ) { // it can't be zero because it would mean the enmy is within the monster, which is impossible
+            enemy = ent;
+        } else {
+            enemy = NULL;
+        }
+    } else {
+        ent = findEnemyAI( current_fov ); // let's find an enemy AI
+        if ( ent && self. distanceTo( ent ) <= blind ) {
+            enemy = ent;
+        } else {
+            enemy = NULL;
+        }
+    }
+    
+    // sound - let's only check sound if we haven't yet sighted the enemy
+    if ( !enemy ) {
+        ent = heardSound( true ); // TODO add find the source of the sound as a goal
+        if ( ent && self. distanceTo( ent ) <= deaf ) {
+            enemy = ent;
+        } else {
+            enemy = NULL;
         }
     }
 
+    if ( enemy ) {
+        goal = enemy;
+        set_enemy( goal );
+        old_goal = NULL;
+        return true;
+    } else {
+        enemy = NULL;
+    }
+
+    if ( old_enemy )
+        if ( old_enemy.getHealth() > 0 ) ) {
+            goal = old_goal;
+            set_enemy( goal );
+            old_goal = NULL;
+            return true;
+        } else {
+            goal = NULL;
+        }
+    } 
+    return false;
+}
+
+boolean ai_bipped::check_sight() {
+    entity enemy, ent;
+
+    enemy = NULL;
+
+    //sight
+    ent = findEnemy( current_fov ); //find the player?
+    if ( ent && self.distanceTo( ent ) <= blind )  {
+            enemy = ent;
+    }
+
+    if ( !enemy ) {
+        ent = findEnemyAI( current_fov ); // find an enemy NPC?
+        if ( ent && self.distanceTo( ent ) <= blind )  {
+                enemy = ent;
+        }
+    }    
+
+    if ( enemy ) {
+        self.setEnemy( enemy );
+        goal = enemy;
+        return true;
+    }
+
+    return false;
+}
+
+boolean ai_bipped::check_hearing() {
+    entity ent;
+
+    ent = heardSound( true );
+    if ( ent && self. distanceTo( ent ) <= deaf ) {
+        enquiry_pos = ent.getWorldPosition();
+        return true;
+    }
     return false;
 }
 
@@ -249,78 +504,123 @@ void ai_bipped::set_pain() {
 }
 
 void ai_bipped::state_No_Goal() {
-    boolean follow_path;
-    boolean got_enemy;
+    boolean follow_path, got_enemy, heard_enemy, advance_state;
 
-    //get a goal
-        //if we have a path_corner we have a routine
-        //if we have an enemy we have a routine
-            //if we have an old enemy we have an enemy
-            //if we find a new enemy we have an enemy
+    follow_path     = false;
+    follow_player   = false;
+    got_enemy       = false;
+    heard_enemy     = false;
+    start_effects   = false;
+    advance_state   = false;
 
     while( true ) {
+        //special interactions
 
-        if ( AI_TALK ) {
-            // what does it does when activated?
+        // let's check if we have a path assigned 
+        //TODO it doesn't need to be per frame, although the idea was to allow chenge it amidst gameplay, so the dev could assign a path to it anytime
+        if ( !follow_path && check_path_goal( self ) ) {
+            follow_path = true;
         }
 
-        if ( AI_PUSHED ) {
+        //let's see if we find an enemy
+        if ( !got_enemy && check_sight ) {
+            got_enemy = true;
+            start_effects = true;  
+            advance_state = true;
+        }
+
+        //let's see if we can hear him
+        if ( !got_enemy && !heard_enemy && check_hearing() ) { // wether we can combat or not, we can hear an enemy
+            heard_enemy = true;
+            start_effects = true;  
+            advance_state = true;
+        }
+
+        //c++ led interactions
+
+        if ( AI_TALK ) {    //when interacted by the player
+            if ( can_follow_player ) {
+                start_effects = true;
+                follow_player = true;
+                //the goal is the player
+            }
+            // what does it does when talked to?
+            // can we get the talker entity
+        }
+
+        if ( AI_PUSHED ) {  //when touched by another NPC
             // whats does it does when pushed?
+            // can we get the pusher entity?
         }
 
-        if ( AI_PAIN ) {
+        if ( AI_PAIN ) {    //when gets pain
             set_pain();
-            
-            // we have to get the pain inflictor!
+            start_effects = true;  
+            advance_state = true;      
+            // can we get the pain inflictor?
         }
 
-        // let's check if we have a path assigned
-
-        if ( !follow_path ) {
-            if ( check_path_goal() ) {
-                follow_path = true;
+        if ( AI_ACTIVATED ) { //when triggered
+            start_effects = true;
+            if ( can_combat ) {
+                advance_state = true;
             } else {
-                follow_path = false;
+                if ( can_follow_player ) {
+                    start_effects = true;
+                    follow_player = true;
+                }
+                //do watever the NPC does when triggered
             }
         }
 
-        // combat start
+        // the effects of those interactions
 
-        if ( can_combat ) {
-
-            if ( !AI_ACTIVATED ) {
-                if ( check_senses() {
-                    AI_ACTIVATED = true;
-                } else {
-                    AI_ACTIVATED = false;
-                }
-            }       
-
-            if ( AI_ACTIVATED ) {
-                if ( no_mat_fx_start == false ) {
-                    if ( mat_fx_start_activated ) {
-                        show();
-                        if ( !mat_fx_start_control ) { // in case we screwed up
-                            mat_fx_start_control = thread t_mat_fx_start( 0, 0, mat_fx_start_time, 8); // starts the shader effect
-                        } else {
-                            //not necessary but, print a warning
-                        }
+        // first start the effects
+        if ( start_effects ) {
+             if ( !no_mat_fx_start ) {
+                if ( mat_fx_start_activated ) {
+                    show();
+                    if ( !mat_fx_start_control ) { // in case we screwed up
+                        mat_fx_start_control = thread t_mat_fx_start( 0, 0, mat_fx_start_time, 8); // starts the shader effect
+                    } else {
+                        //not necessary but, print a warning
                     }
                 }
+            }
+        }
 
-                if ( no_Activate_Feedback ) {
-                    //go directly to the activated state and don't play the sight animation
-                    setNextState( "state_Routine_Combat" );
-                }
+        if ( advance_state ) {
+            if ( !no_Activate_Feedback ) {
+                if ( heard_enemy ) {
+                    play_animation( animation_sight, 0, 4, false ); //TODO play some kind of animation
+                    waitAction( "animation_custom" );
+                } else if ( got_enemy ) {   
+                    if ( self.distanceTo( goal ) <= AI_RANGE_INFRONT ) {
+                        play_animation( animation_sight_scared, 0, 4, false );
+                        waitAction( "animation_custom" );
+                    } else if ( self.distanceTo( goal ) >= AI_RANGE_MEDIUM ) {
+                        play_animation( animation_sight_pointing, 0, 4, false );
+                        waitAction( "animation_custom" );
+                    } else {
+                        play_animation( animation_sight, 0, 4, false );
+                        waitAction( "animation_custom" );
+                    }
+                } 
+            }
 
-                play_animation( animation_sight, 0, 4, false );
-                waitAction( "animation_custom" );
+            if ( heard_enemy ) {
+                setNextState( "state_Routine_Enquiry" );
+            }            
+                      
+            // combat start
+            if ( can_combat ) {                
                 setNextState( "state_Routine_Combat" );
             }
-        } else {
-            // can't combat
-            //what does an NPC do when activated?
-        } 
+        }
+
+        if ( follow_player ) {
+            setNextState( "state_Routine_Follow" );
+        }
 
         if ( follow_path ) {
             setNextState( "state_Routine_Path" );
@@ -406,8 +706,10 @@ void ai_bipped::init() {
         no_Activate_Feedback = false;
     }
 
-    deaf = getFloatKey( "deaf" ); // distance limit at which he listens, expressed in game units, 0 means it's not deaf at all
-    blind = getFloatKey( "blind" ); // distance limit at which he sees, expressed in game units, 0 means it's not blind at all
+    deaf        = getFloatKey( "deaf" ); // distance limit at which he listens, expressed in game units, 0 means it's not deaf at all
+    blind       = getFloatKey( "blind" ); // distance limit at which he sees, expressed in game units, 0 means it's not blind at all
+    default_fov = getFloatKey( "fov" ); // focal of view of the monster;
+    current_fov = default_fov;
 
     spawn_time = sys.getTime(); // we might not need that
 

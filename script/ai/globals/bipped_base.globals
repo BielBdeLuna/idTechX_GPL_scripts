@@ -21,3 +21,8 @@
 //#define NPC_TURN_WALKING			65
 //#define STAY_TURN_MIN             10
 #define STAY_TURN_THRESHOLD			45 // when in STAY only init turn if the torso is deviating further than 45 degrees
+
+#define AI_RANGE_INFRONT            64
+#define AI_RANGE_SHORT              128
+#define AI_RANGE_MEDIUM             512
+#define AI_RANGE_LONG               2048    

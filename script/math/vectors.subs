@@ -4,5 +4,32 @@ boolean check_dir_inverse_alignment ( vector local_dir, vector ref_dir, float th
     return ( sys.vecLength ( local_dir - ref_dir ) < threshold );
 }
 
+/*
+    returns true if two directions are aligned and allows for certain de-alignment conrolled by a threshold
+*/
+boolean check_alignment( vector dir_a, vector dir_b, float angle_threshold ) {
 
+    //first make sure we use directions and not vectors
+    dir_a = sys.vecNormalize( dir_a );
+    dir_b = sys.vecNormalize( dir_b );
 
+    //let's allow for a certain angle threshold
+    if ( sys.DotProduct( dir_a, dir_b) < sys.cos( angle_threshold ) ) {
+        return false;
+    }
+    return true;
+}
+
+/*
+    returns true if tow directions are inversely aligned while allowing for a certain de-alignment within a threshold
+*/
+boolean check_collide_alignment(  vector dir_a, vector dir_b, float angle_threshold ) {
+    return check_alignment( dir_a, -dir_b, angle_threshold ); // reverse one of the directions and see i they coincide within the threshold, if so they collide.
+}
+
+/*
+    returns true if a point in space is within the cone of view given a direction, a starting point and an angle
+*/
+boolean check_cone( vector dir, vector pos, vector target_pos, float cone_angle ) {
+    return check_alignment( dir, delta ( pos, target_pos ), cone_angle );
+}

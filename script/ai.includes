@@ -2,6 +2,8 @@
 
 #include "script/ai/subs/subs.script"
 
+#include "script/ai/globals/bipped_base.globals"
+
 //FSM
 #include "script/ai/base.script"
 #include "script/ai/bipped.script"
