@@ -1,0 +1,223 @@
+//this file is GPLv3
+
+void ai_bipped::state_Routine_Combat() {
+    entity new_enemy;
+    while( true ) {
+        // am I outside the AAS?
+            // simple quake 1 AI --> maybe a taunt state? -TODO devise a non-AAS AI system, maybe with traces?
+            // continue
+
+        // is my enemy outside the AAS?
+            // is enemy visble?
+                // is enemy at meleé reach?
+                    // meleé enemy
+                // else
+                    // taunt
+            // else
+                // simple quake 1 AI --> maybe a taunt state?
+                // maybe activate other unactivated monsters?
+                // maybe keep looking for other monsters?
+                // continue
+        // else
+            // is enemy reachable?
+                // is enemy visible?
+                    // do we range attack the enemy?
+                        // range attack enemy
+                    // else
+                        // is enemy at meleé reach?
+                            // do I meleé enemy?
+                                // melée enemy
+                            // else
+                                // ?
+                        // else
+                            // move towards enemy
+                // else
+                    // chase him
+            // else
+                // call other firends to me so they all see the enemy
+                // taunt
+
+    //          ^^^^ this whole AI is so simple! ^^^^
+    /*
+        combat is a lineal action that might branch according to my capacities an his
+
+        * there should be a following of both the goal capacities as well as my own capacities
+
+        * several strategies should play a part on the combat
+
+        * any strategy is designed to acomplish a goal
+
+        * every strategy is a linear set of actions designed to win over the enemy at every stage
+
+        * the change of strategy only is encessary when the goal of the last startegy is unreachable or the cost of reaching is is too great to bare
+
+        * goals:
+
+            -   lower the health to a percentage quickly.
+            -   gain terrain quiclky
+            -   flank the enmy quickly
+            -   retreat quickly
+
+        * combat, move or move while in combat
+        * check the strategy goal completeness
+    */
+        sys.waitFrame();
+    }
+}
+
+void ai_bipped::state_Routine_Path() {
+    while( true ) {
+        if ( !check_path_routine() ) {
+            // issue a warning
+            setNextState( "state_No_Goal" );
+        }
+    }
+}
+
+void ai_bipped::state_No_Goal() {
+    boolean follow_path, got_enemy, heard_enemy, advance_state;
+
+    follow_path     = false;
+    follow_player   = false;
+    got_enemy       = false;
+    heard_enemy     = false;
+    start_effects   = false;
+    advance_state   = false;
+
+    while( true ) {
+        //special interactions
+
+        // let's check if we have a path assigned 
+        //TODO it doesn't need to be per frame, although the idea was to allow chenge it amidst gameplay, so the dev could assign a path to it anytime
+        if ( !follow_path && check_path_goal( self ) ) {
+            follow_path = true;
+        }
+
+        //let's see if we find an enemy
+        if ( !got_enemy && check_sight ) {
+            got_enemy = true;
+            start_effects = true;  
+            advance_state = true;
+        }
+
+        //let's see if we can hear him
+        if ( !got_enemy && !heard_enemy && check_hearing() ) { // wether we can combat or not, we can hear an enemy
+            heard_enemy = true;
+            start_effects = true;  
+            advance_state = true;
+        }
+
+        //c++ led interactions
+
+        if ( AI_TALK ) {    //when interacted by the player
+            if ( can_follow_player ) {
+                start_effects = true;
+                follow_player = true;
+                //the goal is the player
+            }
+            // what does it does when talked to?
+            // can we get the talker entity
+        }
+
+        if ( AI_PUSHED ) {  //when touched by another NPC
+            // whats does it does when pushed?
+            // can we get the pusher entity?
+        }
+
+        if ( AI_PAIN ) {    //when gets pain
+            set_pain();
+            start_effects = true;  
+            advance_state = true;      
+            // can we get the pain inflictor?
+        }
+
+        if ( AI_ACTIVATED ) { //when triggered
+            start_effects = true;
+            if ( can_combat ) {
+                advance_state = true;
+            } else {
+                if ( can_follow_player ) {
+                    start_effects = true;
+                    follow_player = true;
+                }
+                //do watever the NPC does when triggered
+            }
+        }
+
+        // the effects of those interactions
+
+        // first start the effects
+        if ( start_effects ) {
+             if ( !no_mat_fx_start ) {
+                if ( mat_fx_start_activated ) {
+                    show();
+                    if ( !mat_fx_start_control ) { // in case we screwed up
+                        mat_fx_start_control = thread t_mat_fx_start( 0, 0, mat_fx_start_time, 8); // starts the shader effect
+                    } else {
+                        //not necessary but, print a warning
+                    }
+                }
+            }
+        }
+
+        if ( advance_state ) {
+            if ( !no_Activate_Feedback ) {
+                if ( heard_enemy ) {
+                    play_animation( animation_sight, 0, 4, false ); //TODO play some kind of animation
+                    waitAction( "animation_custom" );
+                } else if ( got_enemy ) {   
+                    if ( self.distanceTo( goal ) <= AI_RANGE_INFRONT ) {
+                        play_animation( animation_sight_scared, 0, 4, false );
+                        waitAction( "animation_custom" );
+                    } else if ( self.distanceTo( goal ) >= AI_RANGE_MEDIUM ) {
+                        play_animation( animation_sight_pointing, 0, 4, false );
+                        waitAction( "animation_custom" );
+                    } else {
+                        play_animation( animation_sight, 0, 4, false );
+                        waitAction( "animation_custom" );
+                    }
+                } 
+            }
+
+            if ( heard_enemy ) {
+                setNextState( "state_Routine_Enquiry" );
+            }            
+                      
+            // combat start
+            if ( can_combat ) {                
+                setNextState( "state_Routine_Combat" );
+            }
+        }
+
+        if ( follow_player ) {
+            setNextState( "state_Routine_Follow" );
+        }
+
+        if ( follow_path ) {
+            setNextState( "state_Routine_Path" );
+        }
+
+        sys.waitFrame();
+    }
+
+}
+/*
+void ai_bipped::state_Spawn() {
+    // remember this is an animation only stage that plays when the entity is created
+    // this also initiates any material effect that initiates with the spawn like hidding the model.
+
+    // do the animation and wait for it to finish
+
+    if ( Silent ) {
+        // put the silent waiting animation
+    } else {
+        // do the spawn aniamtion
+        while ( animeationfinished ) {
+            waitFrame();
+        }
+    }
+
+    setNextState( "state_no_goal" );
+    
+}
+*/

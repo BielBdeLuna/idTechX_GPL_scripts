@@ -1,0 +1,96 @@
+// this file is GPL
+
+/*
+ this functions manages the change in position of the npc
+*/
+/*
+void move_to_goal ( vector final_dir, boolean speedy ) {
+    // first gather info on the nature of the movement then execute the movmeent according to it's nature
+    
+    // gathering info
+    
+    vector current_pos = self.getWorldPosition();
+    vector current_dir = sys.angToForward( self.getAngles(); );
+
+    float   current_speed = ?       // what velocity are we in?
+    bool    last_position = ?       //we stop there or not?
+
+    float   travel_distance;
+    
+    // can the movement be completed in a striaght line?
+        // calculate the travel distance
+        
+    // else
+        // calculate the travel distance
+        //?
+
+
+    // start of the movement
+
+    // middle section of the movment
+
+    // end of the movement
+
+    
+
+}
+*/
+
+void ai_bipped::increase_move_speed() {
+    if ( speed == MOVE_SPEED_STAY ) {
+        ideal_speed = MOVE_SPEED_STEP;
+    } else if ( speed == MOVE_SPEED_STEP ) {
+        ideal_speed = MOVE_SPEED_WALK;
+    } else if ( speed == MOVE_SPEED_WALK ) {
+        ideal_speed = MOVE_SPEED_RUN;
+    }
+}
+
+void ai_bipped::decrease_move_speed() {
+    if ( speed == MOVE_SPEED_RUN ) {
+        ideal_speed = MOVE_SPEED_WALK;
+    } else if ( speed == MOVE_SPEED_WALK ) {
+        ideal_speed = MOVE_SPEED_STEP;
+    } else if ( speed == MOVE_SPEED_STEP ) {
+        ideal_speed = MOVE_SPEED_STAY;
+    }
+}
+
+void ai_bipped::move_to_goal ( boolean speedy ) {
+    float dist;
+
+    if ( canReachEntity( goal ) ) {
+
+        //let's define a speed
+        dist = travelDistanceToEntity( goal );
+
+        if ( dist < AI_RANGE_MEDIUM ) {
+            if ( dist < AI_RANGE_SHORT ) {
+                if (dist <= AI_RANGE_INFRONT ) {
+                    ideal_speed = MOVE_SPEED_WALK;
+                } else {
+                    if ( speedy ) {
+                        ideal_speed = MOVE_SPEED_RUN;
+                    } else {
+                        ideal_speed = MOVE_SPEED_WALK;
+                    }
+                }
+            } else {
+                if ( speedy ) {
+                    ideal_speed = MOVE_SPEED_RUN;
+                } else {
+                    ideal_speed = MOVE_SPEED_WALK;
+                }
+            }
+        } else {
+            ideal_speed = MOVE_SPEED_RUN;
+        }
+
+        //let's move there
+        moveToEntity( goal );
+    } else {
+        ideal_speed = MOVE_SPEED_STAY;
+        stopMove();
+        sys.warning( self.getKey("name" ) + ": entity '" + goal.getKey("name") + "' not reachable" );
+    }
+}   

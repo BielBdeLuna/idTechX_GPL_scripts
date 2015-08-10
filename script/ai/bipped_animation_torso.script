@@ -1,0 +1,48 @@
+//this file is GPLv3
+
+void ai_bipped::anim_torso_idle() {
+    idleAnim( ANIMCHANNEL_TORSO, "idle" );
+
+    while ( true ) {
+        if ( AI_PAIN ) {
+            animState( ANIMCHANNEL_TORSO, "anim_torso_pain", 3 );
+        }
+
+        waitFrame();
+    }
+}
+
+void ai_bipped::anim_torso_pain() {
+    //make a sound every time he get's pain?¿?¿? or this should be rleated to the animation itself?
+    playAnim( ANIMCHANNEL_TORSO, getPainAnim() ); // this selects the pain animd epending on the bone hit
+
+    nextpainlimiter = sys.getTime() + 0.25; //TODO this is completely arbitrary (i guess it's rleated to the time the animation leasts )
+
+    while( true ) {
+        if ( !animDone( ANIMCHANNEL_TORSO, 3 ) && AI_PAIN ) {
+            if ( sys.getTime() > nextpainlimiter ) {
+                animState( ANIMCHANNEL_TORSO, "anim_torso_pain", 8 ); // let's go back to the start of pain in a new pain anim
+            }
+        }
+        waitFrame();
+
+    }
+    animState( ANIMCHANNEL_TORSO, "anim_torso_idle", 8 );
+}
+
+void ai_bipped::anim_torso_custom() {
+    while( true ) {
+        if ( !animDone( ANIMCHANNEL_TORSO, custom_blend_out ) ) {
+            finishAction( "animation_custom" );
+            break;
+        }
+        waitFrame();
+    }
+    animState( ANIMCHANNEL_TORSO, "anim_torso_idle", custom_blend_out );
+}
+
+void ai_bipped::anim_torso_custom_cycle() {
+    eachFrame {
+        ; //is this the same as pass in python?
+    }    
+}

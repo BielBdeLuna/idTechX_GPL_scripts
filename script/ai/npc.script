@@ -1,6 +1,6 @@
 //this file is GPLv3
 
-object ai_npc : ai_base {
+object ai_npc : ai_character {
   
     boolean CAN_BE_INTERACTED;
     boolean CAN_TALK;

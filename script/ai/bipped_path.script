@@ -1,0 +1,103 @@
+//this file is GPLv3
+
+boolean ai_bipped::check_next_path_goal( entity e ) {
+    entity path = e.randomPath();
+    if ( path ) {
+        goal = path;
+        return true;
+    }
+    return false;
+}
+
+boolean ai_bipped::check_path_routine() {
+    string classname = goal.getKey("classname"); //get the name of the entity's definition (not the entity "name")
+    if ( classname != "" ) {
+        classname = "routine_" + classname;
+        if( self.hasFunction( classname ) {
+            self.callFunction( classname );
+            return true;
+        }
+    }
+    return false;
+}
+/*
+void ai_bipped::path_get_a_direction( entity path_entity ) {
+    boolean stop_and_turn = true;
+    if ( path_entity.getIntKey ( "stopNturn" ) <= 0 ) {
+        stop_and_turn = false;
+    }
+    float   forcedirection = path_entity.getIntKey( "angle" );
+}
+
+void ai_bipped::path_do_custom_anim( entity path_entity ) {
+    string  animname = path_entity.getKey( "anim" );
+    if ( animname != "" ) {
+        play_animation( animname, 0, 4, false );
+        waitAction( "animation_custom" );
+    }
+}
+
+boolean ai_bipped::chek_path_change_speed( entity path_entity ) {
+    if ( path_entity.getIntKey ( "speedy" ) <= 0 ) {
+        return false;
+    }
+    ideal_speed = MOVE_SPEED_RUN;
+    return true;
+}
+*/
+void ai_bipped::routine_path_corner {
+    //boolean speedy, wait_for_turn, at_goal;
+    //string anim_name = path_entity.getKey( "anim" );
+
+    boolan  at_goal;
+
+    while ( true ) {
+        at_goal = false;        
+        while ( !at_goal ) {
+            sys.waitFrame();
+        }
+        sys.waitFrame();
+    }
+
+
+    /*    
+    // trigger a pre-trigger
+    while ( true ) {
+        // check for enemies
+
+        if ( at_goal ) {
+            if ( wait_turn ) {
+                // turn
+                sys.waitFrame();
+                continue;
+            }
+
+            if ( animname != "" ) {
+                play_animation( animname, 0, 4, false );
+                waitAction( "animation_custom" );
+            }
+
+            if ( check_next_path_goal( goal ) ) {                
+                return; // a new goal has been set, let the path routine deal with it
+            } else {
+                setNextState( "state_No_Goal" ); // no new "path_" goal available go back to No_Goal
+            }
+        } else {
+            if ( wait_turn ) {
+                // approach goal
+            } else {
+                //if goal close
+                    //approach and turn
+                //else
+                    //aproach goal
+            
+                //if distance to goal reached
+                    at_goal = true;
+                    sys.waitFrame();
+                    continue;
+            }
+        }
+        sys.waitFrame();
+    }
+    */
+}

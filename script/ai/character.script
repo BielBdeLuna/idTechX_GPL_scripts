@@ -1,6 +1,6 @@
 //this file is GPLv3
 
-object ai_base {
+object ai_character {
 
 // c++ inputs
 

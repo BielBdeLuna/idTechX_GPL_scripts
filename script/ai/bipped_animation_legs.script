@@ -1,0 +1,67 @@
+//this file is GPLv3
+
+void ai_bipped::legs_stand() {
+    
+}
+
+void ai_bipped::legs_move() {
+
+}
+
+void ai_bipped::legs_movement_corrector() {
+    float turn_rate = getTurnRate(); //TODO this should be in init
+    float turn_delta;
+
+    while( true ) {
+        turn_delta = getTurnDelta();
+
+        if ( ( turn_delta >= TURN_AROUND_THRESHOLD ) || ( turn_delta <= -TURN_AROUN_THRESHOLD ) ) {
+            //either when in stay or above speed, turn arround when we have a delta above 100 degrees, once below 100 degrees it goes back to turning in movement,
+            if ( ideal_speed > MOVE_SPEED_STEP )
+                setTurnRate( turn_rate * 2 ); // increase the turn speed
+            }
+            //play aniamtion step backwards, if we are not playing it already.
+        } else if ( ( !AI_FORWARD ) && ( turn_delta >= TURN_STAY_THRESHOLD ) ) {
+            // a case for when the player turns left while he is not walking
+            setTurnRate( turn_rate ); // in case we come from the amidst another instance of this state
+            //play turn left aniamtion, if we are not playing it already.
+        } else if ( ( !AI_FORWARD ) && ( turn_delta <= -TURN_STAY_THRESHOLD ) ) {
+            // a case for when the player turns right while he is not walking
+            setTurnRate( turn_rate ); // in case we come from the amidst another instance of this state
+            //play turn right animation, if we are not playing it already.
+        } else {
+            if ( AI_FORWARD ) {
+                setTurnRate( turn_rate ); // let's go back to normal wether if we run or not
+
+                if ( ( turn_delta < TURN_AROUND_THRESHOLD ) && ( turn_delta > -TURN_AROUND_THRESHOLD ) ) {
+                    // make sure we have turned around
+                    if ( ( turn_delta < TURN_WALK_THRESHOLD ) && ( turn_delta > -TURN_WALK_THRESHOLD ) ) {
+                        //setNextState( move )
+                    } else {
+                        if ( ideal_speed > MOVE_SPEED_WALK ) {
+                            // when they run
+                            if ( turn_delta > 0 ) { // yes so they don't walk like Buster Keaton.
+                                //so they turn left
+                                //animate a "right dodge walk", if we are not playing it already. So they get back to their original line
+                            } else {
+                                //so they turn right
+                                //animate a "left dodge walk", if we are not playing it already. So they get back to their original line
+                            }
+                        } else {
+                            // when they don't run
+                            if ( turn_delta > 0 ) {
+                                //so they turn left
+                                //animate a "left dodge step", if we are not playing it already. So they step already in their walk or step direction
+                            } else {
+                                //so they turn right
+                                //animate a "right dodge step", if we are not playing it already. So they step already in their walk or step direction
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+}

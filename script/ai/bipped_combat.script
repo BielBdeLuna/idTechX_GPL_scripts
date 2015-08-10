@@ -1,0 +1,98 @@
+// this file is GPLv3
+
+boolean ai_bipped::check_sight() {
+    entity enemy, ent;
+
+    enemy = NULL;
+
+    //sight
+    ent = findEnemy( current_fov ); //find the player?
+    if ( ent && self.distanceTo( ent ) <= blind )  {
+            enemy = ent;
+    }
+
+    if ( !enemy ) {
+        ent = findEnemyAI( current_fov ); // find an enemy NPC?
+        if ( ent && self.distanceTo( ent ) <= blind )  {
+                enemy = ent;
+        }
+    }    
+
+    if ( enemy ) {
+        self.setEnemy( enemy );
+        goal = enemy;
+        return true;
+    }
+
+    return false;
+}
+
+boolean ai_bipped::check_hearing() {
+    entity ent;
+
+    ent = heardSound( true );
+    if ( ent && self. distanceTo( ent ) <= deaf ) {
+        enquiry_pos = ent.getWorldPosition();
+        return true;
+    }
+    return false;
+}
+
+void ai_bipped::check_senses() {
+    entity ent, enemy, old_enemy;
+
+    if ( ( old_goal.getKey( "spawnclass" ) == ( "idAI" || "idPlayer" ) ) && old_goal.getHealth() > 0 ) {
+        old_enemy = old_goal;
+    } else {
+        old_enemy = NULL;
+    }
+
+    //get an entity to play with
+    //  sight
+    ent = findEnemy( current_fov ); // let's find a player
+    if ( ent ) {
+        if ( self. distanceTo( ent ) <= blind ) { // it can't be zero because it would mean the enmy is within the monster, which is impossible
+            enemy = ent;
+        } else {
+            enemy = NULL;
+        }
+    } else {
+        ent = findEnemyAI( current_fov ); // let's find an enemy AI
+        if ( ent && self. distanceTo( ent ) <= blind ) {
+            enemy = ent;
+        } else {
+            enemy = NULL;
+        }
+    }
+    
+    // sound - let's only check sound if we haven't yet sighted the enemy
+    if ( !enemy ) {
+        ent = heardSound( true ); // TODO add find the source of the sound as a goal
+        if ( ent && self. distanceTo( ent ) <= deaf ) {
+            enemy = ent;
+        } else {
+            enemy = NULL;
+        }
+    }
+
+    if ( enemy ) {
+        goal = enemy;
+        set_enemy( goal );
+        old_goal = NULL;
+        return true;
+    } else {
+        enemy = NULL;
+    }
+
+    if ( old_enemy ) {
+        if ( old_enemy.getHealth() > 0 ) ) {
+            goal = old_goal;
+            set_enemy( goal );
+            old_goal = NULL;
+            return true;
+        } else {
+            goal = NULL;
+        }
+    } 
+    return false;
+}
