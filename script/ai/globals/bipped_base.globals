@@ -21,7 +21,8 @@
 #define STAY_TURN_THRESHOLD			45 
 #define TURN_STAY_THRESHOLD         45  // when in STAY only init turn if the torso is deviating further than 45 degrees
 #define TURN_WALK_THRESHOLD         30  // when WALKING or more speedy than WALKING he will turn when deviating further than 45 degrees
-#define TURN_MINIMUM                10  // ?¿?
+#define TURN_RUN_THRESHOLD          25  // when RUNNING or more speedy ( in the future we could add a sprint )
+#define TURN_MINIMUM                10  // from turn to stay/walk only return when a minimum is reached
 
 #define TURN_AROUND_THRESHOLD       100
 
@@ -29,3 +30,6 @@
 #define AI_RANGE_SHORT              128
 #define AI_RANGE_MEDIUM             512
 #define AI_RANGE_LONG               2048    
+
+#define TURN_BLEND_FRAME                4
+#define BLEND_STANDARD_TIME             4

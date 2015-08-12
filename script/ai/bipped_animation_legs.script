@@ -1,67 +1,244 @@
 //this file is GPLv3
 
-void ai_bipped::legs_stand() {
+void ai_bipped::legs_stay() {
+    float turn_delta, relax_time;
+    boolean action_pose;
+
+    allowMovement( false );
+    if ( current_speed != MOVE_SPEED_STAY ) {
+        action_pose = true;
+        ideal_speed = MOVE_SPEED_STAY;
+        relax_time = sys.getTime() + 1.5;    }
+
+    while ( true ) {
+
+        if ( action_pose && ( sys.getTime() <= relax_time ) ) {
+            idleAnim( ANIMCHANNEL_LEGS, "stay_action" );
+        } else {
+           idleAnim( ANIMCHANNEL_LEGS, "stay" ); 
+        }
+
+        eachFrame {
+            if ( sys.getTime() <= relax_time ) {
+                action_pose = false
+                setBlendFrames( ANIMCHANNEL_LEGS, BLEND_TIME_STANDARD ); // Set with the intention to force the blending when calling the next "idleAnim"
+                continue; //this continue restarts the "while( true )" not the "eachFrame"
+            }
+                
+            turn_delta = getTurnDelta();
+            if ( ( turn_delta >= TURN_STAY_THRESHOLD ) || ( turn_delta <= -TURN_STAY_THRESHOLD ) ) {
+                animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_TIME_STANDARD );
+            } else {
+                if ( AI_FORWARD ) {
+                    animState( ANIMCHANNEL_LEGS, "legs_move", BLEND_TIME_STANDARD );
+                }
+            }
+            waitFrame();
+        }
+
+    
+
+    }
     
 }
 
 void ai_bipped::legs_move() {
+    float turn_delta;
+    float charspeed;
+
+    //TODO ATM the movement is only forward, it should be able to control all kinds of movements in any direction, YES THIS IS BLAND AND NOT WORTHY AT BEST!
+
+    while ( true ) {
+        //FIXME I won't use per frame loops as I want to keep jumping between animations, this will make jerky aniamtions, we might want to reorganize the code some way different, OR NOT IF IT ACTUALLY ISN'T JERKY AT ALL DUE TO THE "setBlendFrames" FUCNTION
+        if ( AI_FORWARD ) {
+            allowMovement( true );
+            if ( current_speed = MOVE_SPEED_STEP ) {
+                charspeed = current_speed;
+                playCycle( ANIMCHANNEL_LEGS, "step_forward" );
+                while ( AI_FORWARD ) {
+                    turn_delta = getTurnDelta();
+                    if ( ( turn_delta >= TURN_STAY_THRESHOLD ) || ( turn_delta <= -TURN_STAY_THRESHOLD ) ) {
+                        animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_STANDARD_TIME );
+                    }
+                    if ( charspeed != current_speed ) {
+                        setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
+                        continue; // this continues the "while ( true )" not the second while
+                    }
+                    waitFrame();
+                }
+            } else if ( current_speed = MOVE_SPEED_WALK ) {
+                charspeed = current_speed;
+                playCycle( ANIMCHANNEL_LEGS, "walk_forward" );
+                while ( AI_FORWARD ) {
+                    turn_delta = getTurnDelta();
+                    if ( ( turn_delta >= TURN_WALK_THRESHOLD ) || ( turn_delta <= -TURN_WALK_THRESHOLD ) ) {
+                        animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_STANDARD_TIME );
+                    }
+                    if ( charspeed != current_speed ) {
+                        setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
+                        continue; // this continues the "while ( true )" not the second while
+                    }
+                    waitFrame();
+                } 
+            } else if ( current_speed = MOVE_SPEED_STEP ) {
+                charspeed = current_speed;
+                playCycle( ANIMCHANNEL_LEGS, "run_forward" );
+                while ( AI_FORWARD ) {
+                    turn_delta = getTurnDelta();
+                    if ( ( turn_delta >= TURN_RUN_THRESHOLD ) || ( turn_delta <= -TURN_RUN_THRESHOLD ) ) {
+                        animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_STANDARD_TIME );
+                    }
+                    if ( charspeed != current_speed ) {
+                        setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
+                        continue; // this continues the "while ( true )" not the second while
+                    }
+                    waitFrame();
+                }
+            } else { //current_speed is STAY
+                sys.warning( self.getKey("name") + ": caution speed not matching anim state!" );
+                if ( ideal_speed != MOVE_SPEED_STAY ) {
+                    current_speed = MOVE_SPEED_STEP;
+                    setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
+                    continue;
+                } else {
+                    animState( ANIMCHANNEL_LEGS, "legs_stay", BLEND_STANDARD_TIME );
+                }
+            }
+        } else {
+            //when stopped
+            ideal_speed = MOVE_SPEED_STAY;
+            animState( ANIMCHANNEL_LEGS, "legs_stay", BLEND_STANDARD_TIME );
+        }
+    }
 
 }
 
 void ai_bipped::legs_movement_corrector() {
-    float turn_rate = getTurnRate(); //TODO this should be in init
-    float turn_delta;
+    float   turn_rate = getTurnRate(); //TODO this should be in init()
+    float   turn_delta;
 
     while( true ) {
         turn_delta = getTurnDelta();
 
-        if ( ( turn_delta >= TURN_AROUND_THRESHOLD ) || ( turn_delta <= -TURN_AROUN_THRESHOLD ) ) {
-            //either when in stay or above speed, turn arround when we have a delta above 100 degrees, once below 100 degrees it goes back to turning in movement,
-            if ( ideal_speed > MOVE_SPEED_STEP )
+        //generalist turn around
+        if ( ( turn_delta >= TURN_AROUND_THRESHOLD ) || ( turn_delta <= -TURN_AROUND_THRESHOLD ) ) {
+            //in either case, turn arround when we have a delta above 100 degrees, once below 100 degrees it goes back to turning in movement,
+            if ( ideal_speed > MOVE_SPEED_STEP ) {
                 setTurnRate( turn_rate * 2 ); // increase the turn speed
             }
-            //play aniamtion step backwards, if we are not playing it already.
-        } else if ( ( !AI_FORWARD ) && ( turn_delta >= TURN_STAY_THRESHOLD ) ) {
-            // a case for when the player turns left while he is not walking
-            setTurnRate( turn_rate ); // in case we come from the amidst another instance of this state
-            //play turn left aniamtion, if we are not playing it already.
-        } else if ( ( !AI_FORWARD ) && ( turn_delta <= -TURN_STAY_THRESHOLD ) ) {
-            // a case for when the player turns right while he is not walking
-            setTurnRate( turn_rate ); // in case we come from the amidst another instance of this state
-            //play turn right animation, if we are not playing it already.
+            playAnim( ANIMCHANNEL_LEGS, "step_backwards" );
+		    while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
+                turn_delta = getTurnDelta();
+                if ( ( turn_delta < TURN_AROUND_THRESHOLD ) && ( turn_delta > -TURN_AROUND_THRESHOLD ) ) {
+                    //setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ); //TODO try if it blends correctly without it 
+                    setTurnRate( turn_rate ); //let's not f it up
+                    continue; //this continues the "while(true)" not the second while
+                }
+			    waitFrame();
+            }
         } else {
-            if ( AI_FORWARD ) {
-                setTurnRate( turn_rate ); // let's go back to normal wether if we run or not
+            setTurnRate( turn_rate ); // let's go back to normal wether if we run or not
 
+            // turns whenever it is walking
+            if ( AI_FORWARD ) {
                 if ( ( turn_delta < TURN_AROUND_THRESHOLD ) && ( turn_delta > -TURN_AROUND_THRESHOLD ) ) {
                     // make sure we have turned around
                     if ( ( turn_delta < TURN_WALK_THRESHOLD ) && ( turn_delta > -TURN_WALK_THRESHOLD ) ) {
-                        //setNextState( move )
+                        animState( ANIMCHANNEL_LEGS, "legs_move", BLEND_STANDARD_TIME );
                     } else {
                         if ( ideal_speed > MOVE_SPEED_WALK ) {
                             // when they run
-                            if ( turn_delta > 0 ) { // yes so they don't walk like Buster Keaton.
+                            if ( turn_delta > 0 ) { // yes their dodge direction is inversed .
                                 //so they turn left
-                                //animate a "right dodge walk", if we are not playing it already. So they get back to their original line
+                                playAnim( ANIMCHANNEL_LEGS, "walk_dodge_right" );
+                                // yes it is inverted from it's turning direction so it don't run like Buster Keaton.
+		                        while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
+                                    turn_delta = getTurnDelta();
+                                    if ( turn_delta < TURN_MINIMUM ) {
+                                        //setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ); //TODO try if it blends correctly without it
+                                        setTurnRate( turn_rate ); //let's not f it up
+                                        continue; //this continues the "while(true)" not the second while
+                                    }
+			                        waitFrame();
+                                }
                             } else {
                                 //so they turn right
-                                //animate a "left dodge walk", if we are not playing it already. So they get back to their original line
+                                playAnim( ANIMCHANNEL_LEGS, "walk_dodge_left" );
+                                // yes it is inverted from it's turning direction so it don't run like Buster Keaton.
+		                        while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
+                                    turn_delta = getTurnDelta();
+                                    if ( turn_delta > -TURN_MINIMUM ) {
+                                        //setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ); //TODO try if it blends correctly without it
+                                        setTurnRate( turn_rate ); //let's not f it up
+                                        continue; //this continues the "while(true)" not the second while
+                                    }
+			                        waitFrame();
+                                }
                             }
                         } else {
                             // when they don't run
                             if ( turn_delta > 0 ) {
                                 //so they turn left
-                                //animate a "left dodge step", if we are not playing it already. So they step already in their walk or step direction
+                                playAnim( ANIMCHANNEL_LEGS, "side_step_left" );
+		                        while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
+                                    turn_delta = getTurnDelta();
+                                    if ( turn_delta > -TURN_MINIMUM ) {
+                                        //setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ); //TODO try if it blends correctly without it
+                                        setTurnRate( turn_rate ); //let's not f it up
+                                        continue; //this continues the "while(true)" not the second while
+                                    }
+			                        waitFrame();
+                                }
                             } else {
                                 //so they turn right
-                                //animate a "right dodge step", if we are not playing it already. So they step already in their walk or step direction
+                                playAnim( ANIMCHANNEL_LEGS, "side_step_right" );
+		                        while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
+                                    turn_delta = getTurnDelta();
+                                    if ( turn_delta > -TURN_MINIMUM ) {
+                                        //setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ); //TODO try if it blends correctly without it
+                                        setTurnRate( turn_rate ); //let's not f it up
+                                        continue; //this continues the "while(true)" not the second while
+                                    }
+			                        waitFrame();
+                                }
                             }
                         }
                     }
                 }
-            }
+            } else {
 
+                //normal turns for a character whenever it is static
+                ideal_speed = MOVE_SPEED_STAY;  // let's make sure we stop the speed FIXME we shouldn't be doing this here
+                if ( ( turn_delta <= TURN_MINIMUM ) && ( turn_delta >= -TURN_MINIMUM ) ) {
+                    animState( ANIMCHANNEL_LEGS, "legs_stay", BLEND_STANDARD_TIME );
+                } else if ( turn_delta >= TURN_STAY_THRESHOLD ) {
+                    // a case for when the character needs to turn left while it's not walking
+                    playAnim( ANIMCHANNEL_LEGS, "step_turn_left" );
+		            while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
+                        turn_delta = getTurnDelta();
+                        if ( turn_delta >= -TURN_MINIMUM ) {
+                            //setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ); //TODO try if it blends correctly without it
+                            setTurnRate( turn_rate ); //let's not f it up
+                            continue; //this continues the "while(true)" not the second while
+                        }
+			            waitFrame();
+                    }
+                } else if ( turn_delta <= -TURN_STAY_THRESHOLD ) {
+                    // a case for when the character needs to turn right while it's not walking
+                    playAnim( ANIMCHANNEL_LEGS, "step_turn_right" );
+		            while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
+                        turn_delta = getTurnDelta();
+                        if ( turn_delta >= -TURN_MINIMUM ) {
+                            //setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ); //TODO try if it blends correctly without it
+                            setTurnRate( turn_rate ); //let's not f it up
+                            continue; //this continues the "while(true)" not the second while
+                        }
+			            waitFrame();
+                    }
+                }
+            }
         }
+        // no need for a waitFrame() here because we get one for every aniamtion in the while
     }
 
 }
