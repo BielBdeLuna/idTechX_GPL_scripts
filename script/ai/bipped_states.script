@@ -163,17 +163,17 @@ void ai_bipped::state_No_Goal() {
         if ( advance_state ) {
             if ( !no_Activate_Feedback ) {
                 if ( heard_enemy ) {
-                    play_animation( animation_sight, 0, 4, false ); //TODO play some kind of animation
+                    play_custom_animation( animation_sight, 0, 4, false, true, false, false ); //FIXME change the aniamtion from "sight" to some "heard"
                     waitAction( "animation_custom" );
                 } else if ( got_enemy ) {   
                     if ( self.distanceTo( goal ) <= AI_RANGE_INFRONT ) {
-                        play_animation( animation_sight_scared, 0, 4, false );
+                        play_custom_animation( animation_sight_scared, 0, 4, false, true, false, false );
                         waitAction( "animation_custom" );
                     } else if ( self.distanceTo( goal ) >= AI_RANGE_MEDIUM ) {
-                        play_animation( animation_sight_pointing, 0, 4, false );
+                        play_custom_animation( animation_sight_pointing, 0, 4, false, true, false, false );
                         waitAction( "animation_custom" );
                     } else {
-                        play_animation( animation_sight, 0, 4, false );
+                        play_custom_animation( animation_sight, 0, 4, false, true, false, false );
                         waitAction( "animation_custom" );
                     }
                 } 

@@ -1,0 +1,21 @@
+//this file is GPLv3
+
+void ai_bipped::play_custom_animation( string anim, float blend_in, float blend_out, boolean cycle, boolean override_legs, boolean move, boolean turn ) {
+    custom_blend_out = blend_out;
+    animation_custom = anim;
+
+    if ( override_legs ) {
+        overrideAnim( ANIMCHANNEL_LEGS );
+        move = false;
+        turn = false;
+    }
+
+    allowMovement( move );
+    allowTurn( turn );
+
+    if ( cycle ) {         
+        animState( ANIMCHANNEL_TORSO, "anim_torso_custom_cycle", blend_in );               
+    } else {
+        animState( ANIMCHANNEL_TORSO, "anim_torso_custom", blend_in );               
+    }
+}

@@ -16,7 +16,7 @@ void ai_bipped::anim_torso_pain() {
     //make a sound every time he get's pain?¿?¿? or this should be rleated to the animation itself?
     playAnim( ANIMCHANNEL_TORSO, getPainAnim() ); // this selects the pain animd epending on the bone hit
 
-    nextpainlimiter = sys.getTime() + 0.25; //TODO this is completely arbitrary (i guess it's rleated to the time the animation leasts )
+    nextpainlimiter = sys.getTime() + 0.25; //TODO this is completely arbitrary (i guess it's related to the time the animation leasts )
 
     while( true ) {
         if ( !animDone( ANIMCHANNEL_TORSO, 3 ) && AI_PAIN ) {
@@ -31,6 +31,7 @@ void ai_bipped::anim_torso_pain() {
 }
 
 void ai_bipped::anim_torso_custom() {
+    playAnim( ANIMCHANNEL_TORSO, animation_custom );
     while( true ) {
         if ( !animDone( ANIMCHANNEL_TORSO, custom_blend_out ) ) {
             finishAction( "animation_custom" );
@@ -42,7 +43,8 @@ void ai_bipped::anim_torso_custom() {
 }
 
 void ai_bipped::anim_torso_custom_cycle() {
+    playCycle( ANIMCHANNEL_TORSO, animation_custom );
     eachFrame {
-        ; //is this the same as pass in python?
+        ; //is this the same as pass in python? contemplate the stars, and the beatiful skies, and... and...
     }    
 }

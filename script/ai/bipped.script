@@ -5,8 +5,19 @@ object ai_bipped : ai_npc {
     float   ideal_speed;            // speed the npc wants to go
     float   current_speed;          // speed the npc actually goes
 
+    vector  combat_dir;
+
     boolean CAN_COMBAT;
     boolean hooked;                 // whether if he is hooked to the goal (follwing him or not)
+
+    boolean IN_NODE;                // we are in a node or not
+
+    string strategy;                // NONE, PIN_ENEMY, FLANK_ENEMY, GET_COVER, GAIN_PROXIMITY, PULL_BACK
+
+    boolean STRATEGY_DONE;          // the strategy is done whete we reached it's goals or the goals have become impossible to reach
+    boolean STRATEGY_MOVE;          // the strategy dictates that it's smart to move
+    boolean STRATEGY_SHOOT;         // the strategy dictates that it's smart to shoot
+    boolean EXPOSED_TO_FIRE;        // are we exposed to fire?
     
     boolean can_follow_player;      // he get's to the goal which is the player
 
@@ -45,6 +56,11 @@ object ai_bipped : ai_npc {
     float   tors_deviation;
     float   head_deviation;
 
+    void    animstate_legs_stay();
+    void    animstate_legs_move();
+    void    animstate_legs_move_corrector();
+
+    /*
     void    anim_leg_idle();
     void    anim_leg_inert();
     void    anim_leg_in_air;        // the animations when he is not on ground
@@ -82,7 +98,7 @@ object ai_bipped : ai_npc {
     void    anim_leg_land;
     void    anim_leg_land_hard;
     void    anim_leg_land_run;
-
+    */
     void    anim_torso_idle();
     void    anim_torso_pain();
     float   nextpainlimiter;
@@ -111,7 +127,7 @@ object ai_bipped : ai_npc {
     void    state_Action_Special(); // special action for a given time
 
     // play custom animations
-    void    play_aniamtion( string anim, float blend_in, float blend_out, boolean cycle );
+    void    play_custom_animation( string anim, float blend_in, float blend_out, boolean cycle, boolean override_legs, boolean move, boolean turn );
 
     void    set_pain(); //leads to the effects of being hit
     float   next_pain;    //next time it will play a pain anim
@@ -121,6 +137,7 @@ object ai_bipped : ai_npc {
     string  animation_sight;
     string  animation_teleport;
     string  animation_special;
+    string  aniamtion_custom;
 
     //checks
     boolean check_path_routine();
@@ -130,6 +147,7 @@ object ai_bipped : ai_npc {
     entity  path_goal;
     entity  goal;
     entity  old_goal;
+    entity  combat_node;
 
     vector  enquiry_pos;
 
@@ -147,22 +165,6 @@ object ai_bipped : ai_npc {
     
 };
 
-void ai_bipped::play_animation( string anim, float blend_in, float blend_out, boolean cycle ){
-    custom_blend_out = blend_out;
-
-    overrideAnim( ANIMCHANNEL_LEGS );
-    if ( cycle ) {
-        animState( ANIMCHANNEL_TORSO, "anim_torso_custom_cycle", blend_in );
-        playCycle( ANIMCHANNEL_TORSO, anim );        
-    } else {
-        animState( ANIMCHANNEL_TORSO, "anim_torso_custom", blend_in );
-        playAnim( ANIMCHANNEL_TORSO, anim );        
-    }
-
-}
-
-
-
 void ai_bipped::set_pain() {
     float delta_health, current_time
 
@@ -178,7 +180,10 @@ void ai_bipped::set_pain() {
     if ( current_time > next_pain ){
         next_pain = current_time + 4;
         // play anim depending on delta_health and health
+        animState( ANIMCHANNEL_TORSO, "anim_pain", 
     }
+
+    //TODO it would be cool to push the enemy aside by the projectile force
 }
 
 
@@ -210,6 +215,7 @@ void ai_bipped::init() {
     //gather spawnargs from the entity
 
     health = self.getHealth();
+    strateggy = "NONE"
 
     Teleports = getIntKey( "teleports" );               //so it defaults to not being teleported
 
@@ -278,7 +284,7 @@ void ai_bipped::init() {
         }
 
         if ( animation_spawn != "" ) {
-            play_animation( animation_spawn, 0, 4, false );
+            play_custom_animation( animation_spawn, 0, 0, false, true, false, false );
             waitAction( "animation_custom" );
         }
     }

@@ -96,3 +96,130 @@ void ai_bipped::check_senses() {
     } 
     return false;
 }
+/*
+    updates the direction of the combat from the 'character' point of view, 
+    that is the direction he has to take to combat the enemy, 
+    this isn't dependant on the direction of any participant.
+*/
+void update_combat_dir() {
+    combat_dir = vec_delta_dir ( self.getWorldOrigin(), goal.getWorldOrigin() );
+}
+
+void update_combat_node() {
+    entity ent;
+
+    ent = getCombatNode();
+
+    if ( combat_node ) {
+        
+
+        if ( IN_NODE ) {
+            if ( ( ent != combat_node ) && ( STRATEGY_MOVE ) ) {
+                combat_node = ent;
+            }            
+        }
+
+        if ( !canReachEntity( combat_node ) ) {
+            combat_node.markUsed(); //it might not be used but since we can't reach it we better forget about it
+            combat_node = ent;
+        }
+    } else {
+        combat_node = ent; // it should get the closest node
+    }
+}
+
+void test_exposed_now() {
+    update_combat_dir();
+
+    if ( check_dir_inverse_alignment ( combat_dir, sys.angToForward( goal.getAngles() ), 45 ) {
+        if ( vec_delta_dist ( self.getWorldOrigin(), goal.getWorldOrigin() ) < AI_RANGE_MEDIUM  ) {
+            if ( canHitEnemy() ) {
+                //so he can hit back
+                EXPOSED_TO_FIRE = true; // we are exposed
+            }
+        }
+    }
+    EXPOSED_TO_FIRE = false;
+}
+
+
+boolean check_enemy_pinned() {
+
+    if ( !canHitEnemy() ) {
+        if ( sys.vecLenght( goal.getLinearVelocity() ) == 0 ) {
+            return true; // he is waiting the shooting to stop
+        }
+    }
+    return false;
+}
+
+boolean check_if_cover_is_optimal( entity cover ) {
+    vector coverDir = sys.angtoForward( cover.getAngles() )
+
+    update_combat_dir();
+
+    if (  check_alignment( coverDir, combat_dir, 45 )  ) {
+        return true;
+    }
+    return false;
+}
+
+void update_strategy() {
+    float result;
+    entity  cover;
+
+    result = 0;
+
+    //value every situation, and depending in the result we will take an strategy ot the other
+
+    // is the enemy pinned?
+        if ( check_enemy_pinned() ) {
+            result ++1;
+        }
+
+    // are we in cover?
+        if ( IN_NODE ) {
+
+        }
+
+    cover = getCombatNode();
+
+    // do we have an optimal cover?
+        if ( cover && check_if_cover_is_optimal( cover ) ) {
+            result ++1;
+        } 
+
+    // do we need to gain terrain?
+        if ( check_gain_position() ) {
+            result ++1;
+        }
+        
+
+    // is my weapon loaded?
+        if ( w_currentClip != w_fullClip ) {
+            result ++1;
+        }
+
+    // are we exposed?
+        if ( EXPOSED_TO_FIRE ) {
+            result = result + 100;
+        }
+
+    // did we get pain
+        if ( sys.getTime() < nextPainTime ) {
+            // we've just recieved pain
+            result = result + 100;            
+        }
+
+    
+
+    if ( result ) {
+
+    } else {
+
+    }
+}
+
+
+
+

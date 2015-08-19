@@ -19,7 +19,6 @@ float relative_dir_to_me( float angle ) {
     return delta( angle, dir );
 }
 
-
 void change_mat_over_time( entity host, float attack_time, float hold_time, float release_time, float mat_parm) {
     float time_portion_attack, time_portion_hold, time_portion_release,
           value_portion_attack, value_portion_release, 

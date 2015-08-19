@@ -1,7 +1,18 @@
 //this file is GPLv3
+vector vec_delta ( vector org, vector end ) {
+    return end - org;
+}
+
+float vec_delta_dist ( vector org, vector end ) {
+    return sys.vecLength( vec_delta( end, org ) );
+}
+
+vector vec_delta_dir ( vector org, vector end ) {
+    return sys.vecNormalize( vec_delta( end, org ) );
+}
 
 boolean check_dir_inverse_alignment ( vector local_dir, vector ref_dir, float threshold ) {
-    return ( sys.vecLength ( local_dir - ref_dir ) < threshold );
+    return ( vec_delta_dist( ref_dir, local_dir ) < threshold );
 }
 
 /*
@@ -31,5 +42,5 @@ boolean check_collide_alignment(  vector dir_a, vector dir_b, float angle_thresh
     returns true if a point in space is within the cone of view given a direction, a starting point and an angle
 */
 boolean check_cone( vector dir, vector pos, vector target_pos, float cone_angle ) {
-    return check_alignment( dir, delta ( pos, target_pos ), cone_angle );
+    return check_alignment( dir, vec_delta( pos, target_pos ), cone_angle );
 }

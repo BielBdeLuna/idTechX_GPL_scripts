@@ -5,6 +5,8 @@ void ai_bipped::legs_stay() {
     boolean action_pose;
 
     allowMovement( false );
+    allowTurn( false );
+
     if ( current_speed != MOVE_SPEED_STAY ) {
         action_pose = true;
         ideal_speed = MOVE_SPEED_STAY;
@@ -27,10 +29,10 @@ void ai_bipped::legs_stay() {
                 
             turn_delta = getTurnDelta();
             if ( ( turn_delta >= TURN_STAY_THRESHOLD ) || ( turn_delta <= -TURN_STAY_THRESHOLD ) ) {
-                animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_TIME_STANDARD );
+                animState( ANIMCHANNEL_LEGS, "animstate_legs_move_corrector", BLEND_TIME_STANDARD );
             } else {
                 if ( AI_FORWARD ) {
-                    animState( ANIMCHANNEL_LEGS, "legs_move", BLEND_TIME_STANDARD );
+                    animState( ANIMCHANNEL_LEGS, "animstate_legs_move", BLEND_TIME_STANDARD );
                 }
             }
             waitFrame();
@@ -58,7 +60,7 @@ void ai_bipped::legs_move() {
                 while ( AI_FORWARD ) {
                     turn_delta = getTurnDelta();
                     if ( ( turn_delta >= TURN_STAY_THRESHOLD ) || ( turn_delta <= -TURN_STAY_THRESHOLD ) ) {
-                        animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_STANDARD_TIME );
+                        animState( ANIMCHANNEL_LEGS, "animstate_legs_move_corrector", BLEND_STANDARD_TIME );
                     }
                     if ( charspeed != current_speed ) {
                         setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
@@ -72,7 +74,7 @@ void ai_bipped::legs_move() {
                 while ( AI_FORWARD ) {
                     turn_delta = getTurnDelta();
                     if ( ( turn_delta >= TURN_WALK_THRESHOLD ) || ( turn_delta <= -TURN_WALK_THRESHOLD ) ) {
-                        animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_STANDARD_TIME );
+                        animState( ANIMCHANNEL_LEGS, "animstate_legs_move_corrector", BLEND_STANDARD_TIME );
                     }
                     if ( charspeed != current_speed ) {
                         setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
@@ -86,7 +88,7 @@ void ai_bipped::legs_move() {
                 while ( AI_FORWARD ) {
                     turn_delta = getTurnDelta();
                     if ( ( turn_delta >= TURN_RUN_THRESHOLD ) || ( turn_delta <= -TURN_RUN_THRESHOLD ) ) {
-                        animState( ANIMCHANNEL_LEGS, "legs_movement_corrector", BLEND_STANDARD_TIME );
+                        animState( ANIMCHANNEL_LEGS, "animstate_legs_move_corrector", BLEND_STANDARD_TIME );
                     }
                     if ( charspeed != current_speed ) {
                         setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
@@ -101,21 +103,25 @@ void ai_bipped::legs_move() {
                     setBlendFrames( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME );
                     continue;
                 } else {
-                    animState( ANIMCHANNEL_LEGS, "legs_stay", BLEND_STANDARD_TIME );
+                    animState( ANIMCHANNEL_LEGS, "animstate_legs_stay", BLEND_STANDARD_TIME );
                 }
             }
         } else {
             //when stopped
             ideal_speed = MOVE_SPEED_STAY;
-            animState( ANIMCHANNEL_LEGS, "legs_stay", BLEND_STANDARD_TIME );
+            animState( ANIMCHANNEL_LEGS, "animstate_legs_stay", BLEND_STANDARD_TIME );
         }
     }
 
 }
 
-void ai_bipped::legs_movement_corrector() {
+void ai_bipped::animstate_legs_move_corrector() {
     float   turn_rate = getTurnRate(); //TODO this should be in init()
     float   turn_delta;
+
+    //FIXME i think this whole function is less clever than I though initially, what if the char is already running? where are the space checks to see if he can do it beforehand? where are the alternatives? this is very robot-like behaviour!
+
+    allowTurn( true );
 
     while( true ) {
         turn_delta = getTurnDelta();
@@ -144,7 +150,7 @@ void ai_bipped::legs_movement_corrector() {
                 if ( ( turn_delta < TURN_AROUND_THRESHOLD ) && ( turn_delta > -TURN_AROUND_THRESHOLD ) ) {
                     // make sure we have turned around
                     if ( ( turn_delta < TURN_WALK_THRESHOLD ) && ( turn_delta > -TURN_WALK_THRESHOLD ) ) {
-                        animState( ANIMCHANNEL_LEGS, "legs_move", BLEND_STANDARD_TIME );
+                        animState( ANIMCHANNEL_LEGS, "animstate_legs_move", BLEND_STANDARD_TIME );
                     } else {
                         if ( ideal_speed > MOVE_SPEED_WALK ) {
                             // when they run
@@ -208,11 +214,13 @@ void ai_bipped::legs_movement_corrector() {
             } else {
 
                 //normal turns for a character whenever it is static
+                allowMovement( false );
+
                 ideal_speed = MOVE_SPEED_STAY;  // let's make sure we stop the speed FIXME we shouldn't be doing this here
                 if ( ( turn_delta <= TURN_MINIMUM ) && ( turn_delta >= -TURN_MINIMUM ) ) {
-                    animState( ANIMCHANNEL_LEGS, "legs_stay", BLEND_STANDARD_TIME );
+                    animState( ANIMCHANNEL_LEGS, "animstate_legs_stay", BLEND_STANDARD_TIME );
                 } else if ( turn_delta >= TURN_STAY_THRESHOLD ) {
-                    // a case for when the character needs to turn left while it's not walking
+                            // a case for when the character needs to turn left while it's not walking
                     playAnim( ANIMCHANNEL_LEGS, "step_turn_left" );
 		            while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
                         turn_delta = getTurnDelta();
@@ -224,7 +232,7 @@ void ai_bipped::legs_movement_corrector() {
 			            waitFrame();
                     }
                 } else if ( turn_delta <= -TURN_STAY_THRESHOLD ) {
-                    // a case for when the character needs to turn right while it's not walking
+                            // a case for when the character needs to turn right while it's not walking
                     playAnim( ANIMCHANNEL_LEGS, "step_turn_right" );
 		            while( !animDone( ANIMCHANNEL_LEGS, BLEND_STANDARD_TIME ) ) {
                         turn_delta = getTurnDelta();

@@ -1,0 +1,35 @@
+// this file is GPLv3
+boolean ai_bipped::check_gain_position() {
+    //only go after the enemy if it turns his back on me and we have enough distance
+                //define "enough distance"
+        //if the enemy closest node is at a closer distance than the distance to the enemy then head to the node
+
+    float distance_to_enemy, distance_to_node;
+    entity node;
+
+    update_combat_dir(); //FIXME this shouldn't be updated in a check
+    update_combat_node(); //FIXME this shouldn't be updated in a check
+
+    if ( !check_collide_alignment( combat_dir, goal.getAngles(), 60 ) ) {
+        distance_to_enemy = self.distanceTo( goal );
+
+        if ( combat_node ) {
+            distance_to_node =  self.distanceTo( combat_node );
+            if ( ( distance_to_node < distance_to_enemy ) && ( check_alignment( combat_dir, vec_delta_dir( self.getWorldPos(), combat_node.getWorldPos() ), 30 ) ) ) {
+                // the node is closer than the enemy and it'sdirection is aligned with the combat direction within a 30 degree error adjustement.
+                // TODO 30 degrees is an unjustified number, why 30?
+                return true;
+            } 
+        } else {
+                if ( distance_to_enemy <= AI_RANGE_SHORT ) {
+                    //TODO this distance is totally arbitrary
+                    return true;
+                }
+        }
+    }
+    return false;
+}
+
+boolean ai_bipped::check_cover
+
+
