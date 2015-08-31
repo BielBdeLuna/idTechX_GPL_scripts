@@ -8,20 +8,26 @@ object ai_bipped : ai_npc {
     vector  combat_dir;
 
     boolean CAN_COMBAT;
-    boolean hooked;                 // whether if he is hooked to the goal (follwing him or not)
+    //boolean hooked;                 // whether if he is hooked to the goal (follwing him or not)
 
     boolean IN_NODE;                // we are in a node or not
 
-    string strategy;                // NONE, PIN_ENEMY, FLANK_ENEMY, GET_COVER, GAIN_PROXIMITY, PULL_BACK
+    void    w_current_clip;         // current ammo in clip
+    void    w_full_clip;            // max ammo per clip
+    boolean check_clip;
+    float   weapon_strategy;        // W_IDEAL, W_SPRAY_AND_PRAY, W_LAST_BULLETS, W_NEED_TO_RELOAD
+    string  situational_strategy;   // NONE, PIN_ENEMY, FLANK_ENEMY, GET_COVER, GAIN_PROXIMITY, PULL_BACK
 
     boolean STRATEGY_DONE;          // the strategy is done whete we reached it's goals or the goals have become impossible to reach
     boolean STRATEGY_MOVE;          // the strategy dictates that it's smart to move
     boolean STRATEGY_SHOOT;         // the strategy dictates that it's smart to shoot
     boolean EXPOSED_TO_FIRE;        // are we exposed to fire?
+    float   attack_flags;
     
     boolean can_follow_player;      // he get's to the goal which is the player
 
-    float   health;
+    float   health;                 // current health
+    float   max_health;             // health in def
     float   old_health;
 
     float   Teleports;              // acts like a boolean but can be more than 1 so you can select what kind of teleport effect
@@ -131,6 +137,7 @@ object ai_bipped : ai_npc {
 
     void    set_pain(); //leads to the effects of being hit
     float   next_pain;    //next time it will play a pain anim
+    float   in_pain_time;   //pain the char will stop being in pain
 
     // optional aniamtions
     string  animation_spawn;
@@ -159,8 +166,8 @@ object ai_bipped : ai_npc {
 
     //translation stuff
     
-    void    increase_move_speed();
-    void    decrease_move_speed();
+    void    increase_move_speed( boolean current );
+    void    decrease_move_speed( boolean current );
     void    move_to_goal( boolean speedy );
     
 };
@@ -177,7 +184,11 @@ void ai_bipped::set_pain() {
     sys.println( "$" + self.getKey( "name" ) + ": my health is: " + health );
 
     current_time = getTime();
+    in_pain_time = current_time + 2; //FIXME this is completely arbitrary!
     if ( current_time > next_pain ){
+        if ( delta_health > ( max_health / 10 )  ) { //FIXME maybe a tenth is too low?
+            decrease_move_speed( true ); // decrease the current speed if the ammount of health lost is a tenth of the total health
+        }
         next_pain = current_time + 4;
         // play anim depending on delta_health and health
         animState( ANIMCHANNEL_TORSO, "anim_pain", 
@@ -214,10 +225,20 @@ void ai_bipped::init() {
 
     //gather spawnargs from the entity
 
-    health = self.getHealth();
-    strateggy = "NONE"
+    max_health = self.getHealth();
+    health = max_health;
+
+
 
     Teleports = getIntKey( "teleports" );               //so it defaults to not being teleported
+
+    w_full_clip = 32;                                   //32 bullets
+    w_current_clip = w_full_clip;
+    weapon_strategy = W_IDEAL       //TODO use binary flags
+
+    attack_flags = 0;
+
+    situational_strategy = "NONE"   //TODO use binary flags
 
     Hidden = true;
     if ( getIntKey( "hidden" ) <= 0 ) {                 //so it defaults to not being hidden
@@ -268,6 +289,8 @@ void ai_bipped::init() {
     aniamtion_sight = getKey( "anim_sight" );
     animation_special = getKey( "anim_special" );
     animation_teleport = getKey( "anim_teleport" );
+
+    in_pain_time = 0;
 
 
     // setup the visual apparence of the npc

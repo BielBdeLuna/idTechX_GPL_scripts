@@ -36,27 +36,47 @@ void move_to_goal ( vector final_dir, boolean speedy ) {
 }
 */
 
-void ai_bipped::increase_move_speed() {
-    if ( speed == MOVE_SPEED_STAY ) {
-        ideal_speed = MOVE_SPEED_STEP;
-    } else if ( speed == MOVE_SPEED_STEP ) {
-        ideal_speed = MOVE_SPEED_WALK;
-    } else if ( speed == MOVE_SPEED_WALK ) {
-        ideal_speed = MOVE_SPEED_RUN;
+void ai_bipped::increase_move_speed( boolean current ) {
+    if ( current ) {
+        if ( current_speed == MOVE_SPEED_STAY ) {
+            current_speed = MOVE_SPEED_STEP;
+        } else if ( current_speed == MOVE_SPEED_STEP ) {
+            current_speed = MOVE_SPEED_WALK;
+        } else if ( current_speed == MOVE_SPEED_WALK ) {
+            current_speed = MOVE_SPEED_RUN;
+        }
+    } else {
+        if ( current_speed == MOVE_SPEED_STAY ) {
+            ideal_speed = MOVE_SPEED_STEP;
+        } else if ( current_speed == MOVE_SPEED_STEP ) {
+            ideal_speed = MOVE_SPEED_WALK;
+        } else if ( current_speed == MOVE_SPEED_WALK ) {
+            ideal_speed = MOVE_SPEED_RUN;
+        }
     }
 }
 
-void ai_bipped::decrease_move_speed() {
-    if ( speed == MOVE_SPEED_RUN ) {
-        ideal_speed = MOVE_SPEED_WALK;
-    } else if ( speed == MOVE_SPEED_WALK ) {
-        ideal_speed = MOVE_SPEED_STEP;
-    } else if ( speed == MOVE_SPEED_STEP ) {
-        ideal_speed = MOVE_SPEED_STAY;
+void ai_bipped::decrease_move_speed( boolean current ) {
+    if ( current )
+        if ( current_speed == MOVE_SPEED_RUN ) {
+            current_speed = MOVE_SPEED_WALK;
+        } else if ( current_speed == MOVE_SPEED_WALK ) {
+            current_speed = MOVE_SPEED_STEP;
+        } else if ( current_speed == MOVE_SPEED_STEP ) {
+            current_speed = MOVE_SPEED_STAY;
+        }
+    } else {
+        if ( current_speed == MOVE_SPEED_RUN ) {
+            ideal_speed = MOVE_SPEED_WALK;
+        } else if ( current_speed == MOVE_SPEED_WALK ) {
+            ideal_speed = MOVE_SPEED_STEP;
+        } else if ( current_speed == MOVE_SPEED_STEP ) {
+            ideal_speed = MOVE_SPEED_STAY;
+        }
     }
 }
 
-void ai_bipped::move_to_goal ( boolean speedy ) {
+void ai_bipped::move_to_goal( boolean speedy ) {
     float dist;
 
     if ( canReachEntity( goal ) ) {

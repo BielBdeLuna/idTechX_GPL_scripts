@@ -83,6 +83,30 @@ void change_mat_over_time( entity host, float attack_time, float hold_time, floa
     }
 }
 
+/*
+    returns the range in a scale defined in the globals
+*/
+float check_ai_range( entity org, entity end ) {
+    float range;
+
+    if ( org.canReachEntity( end ) ) {
+        range = travelDistanceBetweenEntities( org, end )
+    } else {
+        sys.error(org.getKeyval("name")": can't reach the entity " + end.getKeyval("name") + " ! returning a linear distance." );
+        range = vec_delta_dist ( org.getWorlOrigin() , end.getWorlOrigin() );
+    }
+
+    if ( range <= AI_RANGE_INFRONT ) {
+        return AI_RANGE_INFRONT;
+    } else if ( range <= AI_RANGE_SHORT ) {
+        return AI_RANGE_SHORT;
+    } else if ( range <= AI_RANGE_MEDIUM ) {
+        return AI_RANGE_MEDIUM;
+    } else  {
+        return AI_RANGE_LONG;
+    }
+}
+
 void material_remixer (entiy host, float mat_parm, float initial_value ) {
     float mat_parm_value = initial_value;
     float effect_pct = 1; // full percentage

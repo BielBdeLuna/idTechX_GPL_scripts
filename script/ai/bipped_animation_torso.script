@@ -13,7 +13,7 @@ void ai_bipped::anim_torso_idle() {
 }
 
 void ai_bipped::anim_torso_pain() {
-    //make a sound every time he get's pain?¿?¿? or this should be rleated to the animation itself?
+    //make a sound every time he get's pain?¿?¿? or this should be related to the animation itself?
     playAnim( ANIMCHANNEL_TORSO, getPainAnim() ); // this selects the pain animd epending on the bone hit
 
     nextpainlimiter = sys.getTime() + 0.25; //TODO this is completely arbitrary (i guess it's related to the time the animation leasts )

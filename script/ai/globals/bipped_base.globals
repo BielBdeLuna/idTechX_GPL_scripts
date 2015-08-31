@@ -33,3 +33,17 @@
 
 #define TURN_BLEND_FRAME                4
 #define BLEND_STANDARD_TIME             4
+
+#define W_IDEAL                         0   // the weapon is ready to shoot with the clip full
+#define W_SPRAY_AND_PRAY                1
+#define W_LAST_BULLETS                  2
+#define W_NEED_TO_RELOAD                3
+
+#define ATTACK_LOST_CHANCE              1   // can't do any of the attacks
+#define ATTACK_MELEE                    2
+#define ATTACK_RANGED                   4
+#define ATTACK_CHARGE                   8   // plunge towards the enemy and try to ram him
+#define ATTACK_MAGIC                    16  // teleport the pain to player ( a la Praevus )or teleport self to a safezone behind the player ( a la H2 Skull Mage )
+#define ATTACK_SPECIAL                  32  // do a special damage
+
+//EOF
