@@ -17,3 +17,12 @@ boolean threshold ( boolean limit, float value, float threshold ) {
         return false;   //not yet reached the threshold.
     }
 }
+
+// invert a boolean, I wonder if this can be achieved by negating the boolean in an equation " = !element "
+boolean invertBool ( bolean element ) {
+    if ( element ) {
+        return false;
+    } else {
+        retunr true;
+    }
+}

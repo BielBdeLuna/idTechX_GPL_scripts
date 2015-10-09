@@ -39,11 +39,16 @@
 #define W_LAST_BULLETS                  2
 #define W_NEED_TO_RELOAD                3
 
-#define ATTACK_LOST_CHANCE              1   // can't do any of the attacks
-#define ATTACK_MELEE                    2
-#define ATTACK_RANGED                   4
-#define ATTACK_CHARGE                   8   // plunge towards the enemy and try to ram him
-#define ATTACK_MAGIC                    16  // teleport the pain to player ( a la Praevus )or teleport self to a safezone behind the player ( a la H2 Skull Mage )
-#define ATTACK_SPECIAL                  32  // do a special damage
+#define ATTACK_NONE                     1   // we don't need to attack!
+#define ATTACK_LOST_CHANCE              2   // can't do any of the attacks
+#define ATTACK_MELEE                    4
+#define ATTACK_RANGED                   8
+#define ATTACK_CHARGE                   16  // plunge towards the enemy and try to ram him
+#define ATTACK_LEAP                     32  // jumping attack
+#define ATTACK_MAGIC                    64  // teleport the pain to player ( a la Praevus fire attack )
+#define ATTACK_MAGIC_RANGED             128 // teleport self to a safezone behind the enemy ( a la H2 Skull Mage )
+#define ATTACK_SPECIAL                  256 // do a special damage
+
+#define TIME_NEXT_ATTACK                4;
 
 //EOF

@@ -23,12 +23,27 @@ object ai_bipped : ai_npc {
     boolean STRATEGY_SHOOT;         // the strategy dictates that it's smart to shoot
     boolean EXPOSED_TO_FIRE;        // are we exposed to fire?
     float   attack_flags;
+    float   time_next_attack;       // time the window of oportuinty for a new attack opens.
     
     boolean can_follow_player;      // he get's to the goal which is the player
+
+    vector  enemy_last_position;    // the last known position of the enemy
+    vector  enemy_last_angles;      // the last known angle direction the enemy was facing
+    float   enemy_search_time;      // the time we consider the enemy is already lost
+    boolean enemy_lost;             // whether is has lost it's enemy or not
+
+    float   time_max_searching_goal // time it should take to find the goal
+    float   time_searching_goal;    // time it has been looking since the loss of his current goal
 
     float   health;                 // current health
     float   max_health;             // health in def
     float   old_health;
+
+    string  head_bone;              // the bone either the head entity is attached to or that represents the neck of a in-model head
+    boolean HEADLESS;               // for characters without head, or in moments without their head
+    boolean HEAD_ATTACHED;          // for characters with interchangeable heads
+    entity  headEntity;                   // the head to those entities who have an interchangeable head
+    entity  nullEntity;
 
     float   Teleports;              // acts like a boolean but can be more than 1 so you can select what kind of teleport effect
     boolean Patient;                // he won't be awakened until it's activated
@@ -228,7 +243,25 @@ void ai_bipped::init() {
     max_health = self.getHealth();
     health = max_health;
 
+    headEntity = getHead();
+    if ( !headEntity ) {        
+        HEAD_ATTACHED = true;
+    } else {        
+        HEAD_ATTACHED = false;
+    }
 
+    head_bone = getKey( "head_joint" );
+    if ( head_bone == "" ) {
+        // since there is no head_bone we consider there is no head, beacuse we can't control it
+        HEADLESS = true;
+    } else {
+        HEADLESS = false;
+    }
+
+    //a nullEntity so the monster can look at something, TODO this shouldn't need to be, we have to devise a way to tell the head to look at dirs without this
+    nullEntity = sys.spawn( "target_null" );
+	nullEntity.bind( self );
+	nullEntity.setOrigin( self.getWorldOrigin );
 
     Teleports = getIntKey( "teleports" );               //so it defaults to not being teleported
 
@@ -237,6 +270,7 @@ void ai_bipped::init() {
     weapon_strategy = W_IDEAL       //TODO use binary flags
 
     attack_flags = 0;
+    time_next_attack = 0;
 
     situational_strategy = "NONE"   //TODO use binary flags
 

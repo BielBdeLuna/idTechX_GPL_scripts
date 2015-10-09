@@ -1,0 +1,27 @@
+//this file is GPLv3
+
+
+void head_looking_at ( entity ent, float t ) {
+    lookAt( ent, t );
+}
+
+void head_looking_to ( vector pos, float t ) {
+    nullEntity.setOrigin( pos );	
+    lookAt( nullEntity, t );
+}
+
+void head_looking_to_dir ( vector dir, float t ) {
+    //CAUTION any vectoangles will need to be tranformed to vectors before with a sys.VecToForward( vector vAngle ) function before use this!
+    vector pos, org;
+
+    if ( HEAD_ATTACHED ) {
+        org = headEntity.getWorldOrigin();
+    } else {
+        org = self.getWorldOrigin() + '0 28 0'; //let's simulate a head position
+    }
+
+    pos = org + ( sys.vecNormalize( dir ) * 10 );
+
+    nullEntity.setOrigin( pos );	
+    lookAt( nullEntity, t );
+}

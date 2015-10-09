@@ -1,8 +1,65 @@
 //this file is GPLv3
 
 void ai_bipped::state_Routine_Combat() {
-    entity new_enemy;
+    time_max_searching_goal = 4; //we define, 4 seconds to get a lost enemy before we consider we've lost him, and for all the funcs related to combat as well
     while( true ) {
+
+        if ( AI_ENEMY_DEAD ) {
+            if ( !check_senses() )
+                waitFrame();
+			    setNextState( "state_No_Goal" );
+            }
+		}
+                
+        if ( AI_PAIN ) {
+            set_pain();
+        }
+
+        // it should act differently acording if he has lost his enemy or not
+        if ( enemy_lost ) {
+
+            //do we hear him? do we see him? until a time has passed then abandon all hope to recover the goal.
+            if ( !check_enemy_lost() | ( sys.getTime() > time_searching_goal + time_max_searching_goal ) ) {
+                waitFrame();
+			    setNextState( "state_No_Goal" );
+            } else {
+                if ( !enemy_lost ) {
+                 continue; // let's go back to normal combat    
+                }
+            }
+
+            // head
+            if ( !check_if_in_enemy_last_pos ) }
+                if ( check_if_enemy_last_pos_is_visible ){
+                    head_looking_to ( enemy_last_position, 1 );                
+                } else {
+                    head_looking_to_dir ( sys.VecToForward( enemy_last_angles ), 1 );
+                }
+            }
+            
+            //legs
+            if ( !check_if_in_enemy_last_pos ) {
+                moveToPosition( enemy_last_position );
+            } else {
+                turnTo( enemy_last_angles.x );
+            }
+        } else {
+
+            // head
+            lookAtEnemy( 1 );           
+
+            // torso
+            faceEnemy();
+            if ( sys.getTime >= time_next_attack ) {
+                perform_attack_action( decide_attack_action() ) // we check here if the enemy is lost or not
+            }
+
+            // legs
+            if ( check_if_move ) {
+                AI_ATTACK_MOVE = true;
+            }
+        }
+
         // am I outside the AAS?
             // simple quake 1 AI --> maybe a taunt state? -TODO devise a non-AAS AI system, maybe with traces?
             // continue
@@ -69,8 +126,10 @@ void ai_bipped::state_Routine_Path() {
     while( true ) {
         if ( !check_path_routine() ) {
             // issue a warning
+            waitFrame();
             setNextState( "state_No_Goal" );
         }
+        //TODO so somnething!
     }
 }
 

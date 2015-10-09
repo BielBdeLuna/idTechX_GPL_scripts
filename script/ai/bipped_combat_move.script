@@ -32,4 +32,3 @@ boolean ai_bipped::check_gain_position() {
 
 boolean ai_bipped::check_cover
 
-

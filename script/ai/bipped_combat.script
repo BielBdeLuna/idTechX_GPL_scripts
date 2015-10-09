@@ -38,62 +38,55 @@ boolean ai_bipped::check_hearing() {
     return false;
 }
 
-void ai_bipped::check_senses() {
-    entity ent, enemy, old_enemy;
-
-    if ( ( old_goal.getKey( "spawnclass" ) == ( "idAI" || "idPlayer" ) ) && old_goal.getHealth() > 0 ) {
-        old_enemy = old_goal;
-    } else {
-        old_enemy = NULL;
-    }
+boolean ai_bipped::check_senses() {
+    entity ent, old_enemy;
+    boolean old_enemy, got_enemy;
 
     //get an entity to play with
     //  sight
     ent = findEnemy( current_fov ); // let's find a player
     if ( ent ) {
         if ( self. distanceTo( ent ) <= blind ) { // it can't be zero because it would mean the enmy is within the monster, which is impossible
-            enemy = ent;
+            got_enemy = true;
         } else {
-            enemy = NULL;
+            got_enemy = false;
         }
     } else {
         ent = findEnemyAI( current_fov ); // let's find an enemy AI
         if ( ent && self. distanceTo( ent ) <= blind ) {
-            enemy = ent;
+            got_enemy = true;
         } else {
-            enemy = NULL;
+            got_enemy = false;
         }
     }
-    
+        
     // sound - let's only check sound if we haven't yet sighted the enemy
-    if ( !enemy ) {
+    if ( !got_enemy ) {
         ent = heardSound( true ); // TODO add find the source of the sound as a goal
         if ( ent && self. distanceTo( ent ) <= deaf ) {
-            enemy = ent;
+            got_enemy = true;
         } else {
-            enemy = NULL;
+            got_enemy = false;
         }
     }
 
-    if ( enemy ) {
-        goal = enemy;
+    if ( got_enemy ) {
+        goal = ent;
         set_enemy( goal );
-        old_goal = NULL;
         return true;
     } else {
-        enemy = NULL;
-    }
+        old_enemy = false;
+        if ( ( old_goal.getKey( "spawnclass" ) == ( "idAI" || "idPlayer" ) ) && old_goal.getHealth() > 0 ) {
+            old_enemy = true;
+        }
 
-    if ( old_enemy ) {
-        if ( old_enemy.getHealth() > 0 ) ) {
+        if ( old_enemy ) {
             goal = old_goal;
             set_enemy( goal );
-            old_goal = NULL;
             return true;
-        } else {
-            goal = NULL;
         }
-    } 
+    }
+
     return false;
 }
 /*
@@ -318,7 +311,7 @@ void update_strategy() {
 
     }
 }
-
+/*
 float update_attack_flags() {
     // this is a lineal check so let's make so the monster is the most protected he can
     // first the melee attack, then the gun attack, then magic attack and eventually the special attack
@@ -337,17 +330,116 @@ float update_attack_flags() {
         }
     } else if ( canHitEnemy() ) {
         if ( enemy_range > AI_RANGE_INFRONT ) {
-            attack_flags |= ATTACK_RANGED ;
+            attack_flags |= ATTACK_RANGED;
         } 
     } else if ( canSee( goal ) == false ) {
-            attack_flags |= ATTACK_MAGIC ;
+            attack_flags |= ATTACK_MAGIC;
     } else { 
         attack_flags |= ATTACK_LOST_CHANCE; 
     }
 
-    return attack_flags
+    return attack_flags;
+}
+*/
+boolean try_to_find_the_enemy() {
+    if ( check_if_in_enemy_last_pos && ( sys.getTime() > ( time_searching_goal + time_max_searching_goal ) ) ) {
+        // time has passed
+        return false;           
+    }
+
+    if ( check_senses() ) {
+        enemy_lost = false
+    }
+
+    return true;
 }
 
+boolean check_enemy_lost() {
+    boolean seeIt, hearIt;
+
+    // do we see him
+    seeIt = canSee( goal );
+    if ( !seeIt ) {
+        //do we hear him?
+        hearIt = ( self.heardSound( false ) == goal );
+    }
+
+    // if seen or heard it it's not lost
+    enemy_lost = !( seeIt | hearIt ); 
+
+    return enemy_lost;
+}
+
+float decide_attack_action() {
+    float attack, enemy_range;
+
+    if ( ( check_enemy_lost() ) || ( in_pain_time > sys.getTime() ) ) {
+        attack = ATTACK_NONE;
+    } else {
+        enemy_range = check_ai_range( self, goal );        
+        
+        if ( ( enemy_range <= AI_RANGE_INFRONT ) && testMeleeAttack() ) {
+            attack = ATTACK_MELEE;
+        } else if ( canHitEnemy() && ( enemy_range > AI_RANGE_INFRONT ) ) {
+            attack = ATTACK_RANGED;
+        } else if ( !canSee( goal ) ) {
+            attack = ATTACK_MAGIC;
+        } else {
+            attack = ATTACK_LOST_CHANCE;
+        }
+    }
+    
+    return attack;
+}
+
+void perform_attack_action( float a ) {
+    float t = sys.getTime();
+
+    time_next_attack = t + TIME_NEXT_ATTACK;
+
+    if ( a == ATTACK_LOST_CHANCE ) {
+        evasive_manuever( true );
+    } else {
+        enemy_last_position = enemy.getWorldORigin();
+        enemy_last_angles = enemy.getAngles();
+        time_searching_goal = sys.getTime(); // 4 seconds after it'll be considered lost, so we still can attack him with magic (when not seeing him)
+    
+        if ( a = ATTACK_NONE ) {
+            evasive_manuever( false );
+        } else if ( a == ATTACK_MELEE ) {
+            // random chose a melee aniamtion
+        } else if ( a == ATTACK_RANGED ) {
+            //shoot aniamtion
+        } else {
+            //do the magic attack whether h teleports around the player or attacks him somewhat magically
+        }
+    }
+}
+
+void evasive_manuever( boolean voaclize ) {
+    if ( vocalize ) {
+        //say something
+    }
+    //choose a direction
+    //run a cycle there
+}
+
+void serch_enemy() {
+
+    
+
+
+    TurnTo( enemy_last_angles.y ); // the enemy last yaw
+}
+
+void serch_enemy_last_position() {
+    /*
+    we can see the position form there
+        the enemy is there
+            attack him
+        else
+            chwenge state_to_search_enemy
+}
 
 
 
