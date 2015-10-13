@@ -11,9 +11,9 @@
 //#include "script/events_engine.script"
 //#include "script/events_game.script"
 
-#include "script/math.include"
+#include "script/math.includes"
 
-#include "script/ai.include"
+#include "script/ai.includes"
 
 void main_func() {
 	sys.print( "started main_func()\n");

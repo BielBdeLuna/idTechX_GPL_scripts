@@ -52,6 +52,6 @@ float randomizeCentredAngle( float range ) {
 }
 
 float getYawFromDir ( vector vec ) {
-    vector fwdVec = sys.angToForward('vec');
-    return fwdVec.x;
+    vector fwdVec = sys.angToForward(vec);
+    return fwdVec_x;
 }
