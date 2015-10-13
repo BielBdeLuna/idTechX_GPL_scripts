@@ -2,8 +2,8 @@
 
 // depending on whether if it is actually a limit or a threshold, it checks if a value surpases a threshold or not.
 
-boolean threshold ( boolean limit, float value, float threshold ) {
-    if ( value >= threshold ) {
+boolean threshold ( boolean limit, float value, float thold ) {
+    if ( value >= thold ) {
         if ( limit ) {
             return false; //outside the limit or in it.
         } else {
@@ -19,10 +19,10 @@ boolean threshold ( boolean limit, float value, float threshold ) {
 }
 
 // invert a boolean, I wonder if this can be achieved by negating the boolean in an equation " = !element "
-boolean invertBool ( bolean element ) {
+boolean invertBool ( boolean element ) {
     if ( element ) {
         return false;
     } else {
-        retunr true;
+        return true;
     }
 }

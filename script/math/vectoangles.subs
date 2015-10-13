@@ -4,7 +4,7 @@
 
 // utilities
 vector vectoanglemod_max_min ( vector angle, float max, float min ) {
-    float abs_change = absolute( max - min )
+    float abs_change = absolute( max - min );
     while ( angle_x >= max ) {
         angle_x -= abs_change;
     }

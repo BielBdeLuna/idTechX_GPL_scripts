@@ -357,6 +357,11 @@ boolean try_to_find_the_enemy() {
 boolean check_enemy_lost() {
     boolean seeIt, hearIt;
 
+    if ( !goal ) {
+        // the enemy is dead
+        return enemy_lost;
+    }
+
     // do we see him
     seeIt = canSee( goal );
     if ( !seeIt ) {

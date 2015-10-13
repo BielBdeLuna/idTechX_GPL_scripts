@@ -4,14 +4,14 @@
 
 // common includes
 
-#include "defs.globals"
+#include "script/defs.globals"
 //#include "script/def_engine.globals"
 //#include "script/def_game.globals"
 #include "script/events.script"
 //#include "script/events_engine.script"
 //#include "script/events_game.script"
 
-#include "script/maths.include"
+#include "script/math.include"
 
 #include "script/ai.include"
 

@@ -6,7 +6,14 @@ void ai_bipped::state_Routine_Combat() {
 
         if ( AI_ENEMY_DEAD ) {
             if ( !check_senses() )
-                waitFrame();
+                // waste some time
+                if ( !check_if_in_enemy_last_pos && check_if_enemy_last_pos_is_visible ){
+                    enemy_lost = true; // this is a fake situation, so he keeps following a ghost for some time
+                    time_searching_goal = sys.getTime();
+                    continue;                    
+                } else {
+                    waitFrame();
+                }
 			    setNextState( "state_No_Goal" );
             }
 		}

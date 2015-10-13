@@ -11,8 +11,8 @@ vector vec_delta_dir ( vector org, vector end ) {
     return sys.vecNormalize( vec_delta( end, org ) );
 }
 
-boolean check_dir_inverse_alignment ( vector local_dir, vector ref_dir, float threshold ) {
-    return ( vec_delta_dist( ref_dir, local_dir ) < threshold );
+boolean check_dir_inverse_alignment ( vector local_dir, vector ref_dir, float dir_threshold ) {
+    return ( vec_delta_dist( ref_dir, local_dir ) < dir_threshold );
 }
 
 /*
