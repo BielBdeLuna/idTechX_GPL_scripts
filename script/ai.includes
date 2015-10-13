@@ -1,5 +1,5 @@
 //this file is GPLv3
-/*
+
 #include "script/ai/globals/bipped_base.globals"
 #include "script/ai/subs/subs.script"
 
@@ -14,4 +14,4 @@
 #include "script/ai/bipped_animation_torso.script"
 #include "script/ai/bipped_animation_legs.script"
 #include "script/ai/bipped_effects.script"
-*/
+
