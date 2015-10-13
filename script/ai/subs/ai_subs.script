@@ -1,22 +1,40 @@
 // this file is GPLv3
 
 
-// an easy subroutine that makes easier to understand where the whole entity is
-
-vector my_position() {
-    return self.getWorldOrigin();
-}
-
 // global direction of the whole entity given in degrees (obiously 0 - 360 degrees range)
-float my_compass_direction() {
-    return vectoangle_compass_direction( self.getAngles() );
+float compass_direction( entity host ) {
+    return vectoangle_compass_direction( host.getAngles() );
 }
 
 // returns the relative direction between the entity direction and a given angle, returns it in a 180 to -180 range
-float relative_dir_to_me( float angle ) {
+float relative_dir_to_me( entity host, float angle ) {
     angle = anglemod_360( angle );
-    float dir = my_compass_direction();
+    float dir = compass_direction( host );
     return delta( angle, dir );
+}
+
+/*
+    returns the range in a scale defined in the globals
+*/
+float check_ai_range( entity org, entity end ) {
+    float range;
+
+    if ( org.canReachEntity( end ) ) {
+        range = org.travelDistanceBetweenEntities( org, end );
+    } else {
+        sys.error( org.getKey( "name" ) + ": can't reach the entity " + end.getKey( "name" ) + " ! returning a linear distance." );
+        range = vec_delta_dist ( org.getWorldOrigin() , end.getWorldOrigin() );
+    }
+
+    if ( range <= AI_RANGE_INFRONT ) {
+        return AI_RANGE_INFRONT;
+    } else if ( range <= AI_RANGE_SHORT ) {
+        return AI_RANGE_SHORT;
+    } else if ( range <= AI_RANGE_MEDIUM ) {
+        return AI_RANGE_MEDIUM;
+    } else  {
+        return AI_RANGE_LONG;
+    }
 }
 
 void change_mat_over_time( entity host, float attack_time, float hold_time, float release_time, float mat_parm) {
@@ -65,16 +83,16 @@ void change_mat_over_time( entity host, float attack_time, float hold_time, floa
                  mat_parm_value = 1; //let's polish the results
             }
 
-            current_time += portion_attack;
+            current_time += time_portion_attack;
         } else if ( ( hold_time > 0 ) && ( current_time > ( attack_time ) ) && ( current_time <= ( attack_time + hold_time ) ) ) {
             mat_parm_value = 1; // the mat_parm_value doesn't change here
-            current_time += portion_hold; 
+            current_time += time_portion_hold; 
         } else if ( release_time > 0 ) {
             mat_parm_value -= value_portion_release;
-            current_time += portion_release;
+            current_time += time_portion_release;
         }
 
-        waitFrame();
+        sys.waitFrame();
     }
 
     //let's polish the results
@@ -83,31 +101,7 @@ void change_mat_over_time( entity host, float attack_time, float hold_time, floa
     }
 }
 
-/*
-    returns the range in a scale defined in the globals
-*/
-float check_ai_range( entity org, entity end ) {
-    float range;
-
-    if ( org.canReachEntity( end ) ) {
-        range = travelDistanceBetweenEntities( org, end )
-    } else {
-        sys.error(org.getKeyval("name")": can't reach the entity " + end.getKeyval("name") + " ! returning a linear distance." );
-        range = vec_delta_dist ( org.getWorlOrigin() , end.getWorlOrigin() );
-    }
-
-    if ( range <= AI_RANGE_INFRONT ) {
-        return AI_RANGE_INFRONT;
-    } else if ( range <= AI_RANGE_SHORT ) {
-        return AI_RANGE_SHORT;
-    } else if ( range <= AI_RANGE_MEDIUM ) {
-        return AI_RANGE_MEDIUM;
-    } else  {
-        return AI_RANGE_LONG;
-    }
-}
-
-void material_remixer (entiy host, float mat_parm, float initial_value ) {
+void material_remixer (entity host, float mat_parm, float initial_value ) {
     float mat_parm_value = initial_value;
     float effect_pct = 1; // full percentage
     float abs_change_pct = 0.01;    
@@ -117,10 +111,10 @@ void material_remixer (entiy host, float mat_parm, float initial_value ) {
     float mat_fx_accel;
     float mat_fx_deccel;
     boolean MAT_FX_PLAY;
-    boolean MAT_fx_FORWARD;
-    boolean MAT_fx_BACKWARD;
-    boolean MAT_fx_ACCEL;
-    boolean MAT_fx_DECCEL;
+    boolean MAT_FX_FORWARD;
+    boolean MAT_FX_BACKWARD;
+    boolean MAT_FX_ACCEL;
+    boolean MAT_FX_DECCEL;
 
     while ( true ) {
 
@@ -174,48 +168,48 @@ void material_remixer (entiy host, float mat_parm, float initial_value ) {
                 }
             }
 
-            if ( MAT_ACCEL ) {
+            if ( MAT_FX_ACCEL ) {
                 effect_pct += abs_change_pct;
-            } else if ( MAT_DECCEL ) {
+            } else if ( MAT_FX_DECCEL ) {
                 effect_pct -= abs_change_pct;
-            } else if ( !MAT_DECCEL && !MAT_ACCEL ) {
+            } else if ( !MAT_FX_DECCEL && !MAT_FX_ACCEL ) {
                 effect_pct = 1;
             }
 
             mat_parm_value *= effect_pct; // this increments the value multipliying itself with the percentage
         }     
 
-        host.setShaderParm(mat_parm, mat_parm_value);
+        host.setShaderParm( mat_parm, mat_parm_value );
         sys.waitFrame();
     }
 
 }
-void mat_fx_play( entity host )     = { 
+void mat_fx_play( entity host ) { 
     host.setKey( "MAT_FX_PLAY", "1" ); 
     host.setKey( "MAT_FX_ACCEL", "0" ); 
     host.setKey( "MAT_FX_DECCEL", "0" ); 
 }
-void mat_fx_pause( entity host )    = { host.setKey( "MAT_FX_PLAY", "0" ); };
-void mat_fx_forward( entity host )  = { 
+void mat_fx_pause( entity host ) { host.setKey( "MAT_FX_PLAY", "0" ); };
+void mat_fx_forward( entity host ) { 
     host.setKey( "MAT_FX_PLAY", "1" );
     host.setKey( "MAT_FX_FORWARD", "1" );
     host.setKey( "MAT_FX_BACKWARD", "0" );
     host.setKey( "MAT_FX_ACCEL", "0" ); 
     host.setKey( "MAT_FX_DECCEL", "0" ); 
 }
-void mat_fx_backward( entity host ) = { 
+void mat_fx_backward( entity host ) { 
     host.setKey( "MAT_FX_PLAY", "1" );
     host.setKey( "MAT_FX_FORWARD", "0" );
     host.setKey( "MAT_FX_BACKWARD", "1" );
     host.setKey( "MAT_FX_ACCEL", "0" ); 
     host.setKey( "MAT_FX_DECCEL", "0" ); 
 }
-void mat_fx_accel( entity host )    = { 
+void mat_fx_accel( entity host ) { 
     host.setKey( "MAT_FX_PLAY", "1" );
     host.setKey( "MAT_FX_ACCEL", "1" ); 
     host.setKey( "MAT_FX_DECCEL", "0" ); 
 }
-void mat_fx_deccel( entity host )   = { 
+void mat_fx_deccel( entity host ) { 
     host.setKey( "MAT_FX_PLAY", "1" ); 
     host.setKey( "MAT_FX_ACCEL", "0" ); 
     host.setKey( "MAT_FX_DECCEL", "1" ); 
