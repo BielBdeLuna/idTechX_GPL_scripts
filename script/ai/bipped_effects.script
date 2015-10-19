@@ -21,3 +21,14 @@ void ai_bipped::t_mat_fx_mid( float attack_time, float hold_time, float release_
     mat_fx_mid_control = 0;
     sys.terminate( threadIdNum );
 }
+
+void ai_bipped::t_mat_fx_end( float attack_time, float hold_time, float release_time, float mat_parm) {
+    float threadIdNum;
+    threadIdNum = mat_fx_end_control;
+
+    change_mat_over_time( self, attack_time, hold_time, release_time, mat_parm);
+
+    //let's kill that thread gracefully and in a way it can be detected as finished from outside the thread    
+    mat_fx_end_control = 0;
+    sys.terminate( threadIdNum );
+}

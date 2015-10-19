@@ -1,0 +1,190 @@
+//this file is GPLv3
+
+object ai_bipped : ai_npc {
+
+    float   ideal_speed;            // speed the npc wants to go
+    float   current_speed;          // speed the npc actually goes
+
+    vector  combat_dir;
+
+    boolean AI_ACTIVATE;
+
+    boolean CAN_COMBAT;
+    //boolean hooked;                 // whether if he is hooked to the goal (follwing him or not)
+
+    boolean IN_NODE;                // we are in a node or not
+
+    float   w_current_clip;         // current ammo in clip
+    float   w_full_clip;            // max ammo per clip
+    boolean check_clip;
+    float   weapon_strategy;        // W_IDEAL, W_SPRAY_AND_PRAY, W_LAST_BULLETS, W_NEED_TO_RELOAD
+    string  situational_strategy;   // NONE, PIN_ENEMY, FLANK_ENEMY, GET_COVER, GAIN_PROXIMITY, PULL_BACK
+
+    boolean STRATEGY_DONE;          // the strategy is done whete we reached it's goals or the goals have become impossible to reach
+    boolean STRATEGY_MOVE;          // the strategy dictates that it's smart to move
+    boolean STRATEGY_SHOOT;         // the strategy dictates that it's smart to shoot
+    boolean EXPOSED_TO_FIRE;        // are we exposed to fire?
+    float   attack_flags;
+    float   time_next_attack;       // time the window of oportuinty for a new attack opens.
+    
+    boolean can_follow_player;      // he get's to the goal which is the player
+
+    vector  enemy_last_position;    // the last known position of the enemy
+    vector  enemy_last_angles;      // the last known angle direction the enemy was facing
+    float   enemy_search_time;      // the time we consider the enemy is already lost
+    boolean enemy_lost;             // whether is has lost it's enemy or not
+
+    float   time_max_searching_goal; // time it should take to find the goal
+    float   time_searching_goal;    // time it has been looking since the loss of his current goal
+
+    float   health;                 // current health
+    float   max_health;             // health in def
+    float   old_health;
+
+    string  head_bone;              // the bone either the head entity is attached to or that represents the neck of a in-model head
+    boolean HEADLESS;               // for characters without head, or in moments without their head
+    boolean HEAD_ATTACHED;          // for characters with interchangeable heads
+    entity  headEntity;                   // the head to those entities who have an interchangeable head
+    entity  nullEntity;
+
+    float   Teleports;            // acts like a boolean but can be more than 1 so you can select what kind of teleport effect
+    boolean Patient;                // he won't be awakened until it's activated
+    boolean no_Hurt_Activate;       // he won't activate if he is hurt
+    boolean Silent;                 // he won't say anything when awakened
+    boolean Hidden;                 // he remains hidden until activated
+    boolean no_Activate_Feedback;   // when activated doesn't play a sight animation
+    float   deaf;                   // he can't hear other monsters
+    float   blind;                  // he won't see any enemy until awakened
+    float   default_fov;            // default field of view of the monster
+    float   current_fov;            // current field of view
+    float   focus_distance;         // distance the monster is focusing on, this could be used
+
+    float   spawn_time;             // time at which it spawned
+
+    void    t_mat_fx_start( float attack_time, float hold_time, float release_time, float mat_parm); // thread control of the the material effect at the start
+    float   mat_fx_start_control;
+
+    void    t_mat_fx_mid( float attack_time, float hold_time, float release_time, float mat_parm);   // thread control of the the material effect at mid term
+    float   mat_fx_mid_control;
+    
+    void    t_mat_fx_end( float attack_time, float hold_time, float release_time, float mat_parm);   // thread control of the the material effect at the end
+    float   mat_fx_end_control;
+    
+    float   mat_fx_start_time;      // time at which the spawn shader effect should finish (in a monster made of lava, the time it solidifies)
+    boolean no_mat_fx_start;        // wether we should take into account a shader effect
+    boolean mat_fx_start_activated; // wether we should play the shader effect (if any) at spawn time or at activate time
+    float   mat_fx_start_value;     // the actual value passed to the material
+
+    float   legs_deviation;         // from -360 to 360
+    float   tors_deviation;
+    float   head_deviation;
+
+    void    animstate_legs_stay();
+    void    animstate_legs_move();
+    void    animstate_legs_move_corrector();
+
+    /*
+    void    anim_leg_idle();
+    void    anim_leg_inert();
+    void    anim_leg_in_air;        // the animations when he is not on ground
+    void    anim_leg_special_anim ( string anim_name ); // a function for a user specified animation
+
+    void    anim_leg_walk_forward();
+    void    anim_leg_walk_backward();
+    boolean CAN_STEP;
+    void    anim_leg_step_forward();
+    void    anim_leg_step_backward();
+    boolean CAN_RUN;
+    void    anim_leg_run_forward();
+    void    anim_leg_run_backward();
+
+    void    anim_leg_turn_left();
+    void    anim_leg_turn_right();
+
+    boolean CAN_STRAFE;
+    void    anim_leg_step_left();
+    void    anim_leg_step_right();
+    void    anim_leg_run_left();    //strafe
+    void    anim_leg_run_right();   //strafe
+
+    boolean CAN_CROUCH;
+    void    anim_leg_crouched_idle;
+
+    void    anim_leg_crouched_forward;
+    void    anim_leg_crouched_backward;
+    void    anim_leg_crouched_left;
+    void    anim_leg_crouched_right;
+
+    boolean CAN_JUMP;
+    void    anim_leg_jump;
+    void    anim_leg_jump_run;
+    void    anim_leg_land;
+    void    anim_leg_land_hard;
+    void    anim_leg_land_run;
+    */
+    void    anim_torso_idle();
+    void    anim_torso_pain();
+    float   nextpainlimiter;
+    float   custom_blend_out;
+    void    anim_torso_custom();
+    void    anim_torso_custom_cycle();
+
+    void    init();
+    void    clear();
+    void    destroy();
+
+//    void    state_Spawn(); // play an animation for the start an setup any starting effect
+    void    state_Failed(); // before diying when bleeding, burning, electrocuted, drowning
+    void    state_Insta_Killed();   //
+    void    state_Killed(); //called from the c++
+    void    state_Dead(); // before destroying it
+    void    state_No_Goal(); //search for a goal or an enemy
+    void    state_Routine_Enquiry(); // search for an unseen enemy in a position layed down by the enemy's sound
+    void    state_Routine_Combat();
+    void    state_Routine_Path();
+    //void    state_Displace(); // walk / run / step unless we have to stop, or we have to manuver
+    //void    state_Stop(); // get the next goal in a series
+    //void    state_Manuvering(); //turning and crouching
+    void    state_Talk();
+    void    state_Action(); // action to keep doing
+    void    state_Action_Special(); // special action for a given time
+
+    // play custom animations
+    void    play_custom_animation( string anim, float blend_in, float blend_out, boolean cycle, boolean override_legs, boolean move, boolean turn );
+
+    void    set_pain(); //leads to the effects of being hit
+    float   next_pain;    //next time it will play a pain anim
+    float   in_pain_time;   //pain the char will stop being in pain
+
+    // optional aniamtions
+    string  animation_spawn;
+    string  animation_sight;
+    string  animation_teleport;
+    string  animation_special;
+    string  aniamtion_custom;
+
+    //checks
+    boolean check_path_routine();
+    boolean check_sight();
+    boolean check_hearing();
+    
+    entity  path_goal;
+    entity  goal;
+    entity  old_goal;
+    entity  combat_node;
+
+    vector  enquiry_pos;
+
+    // path stuff;
+    
+    boolean check_path_routine();
+    boolean check_next_path_goal( entity e );
+    void    routine_path_corner();
+
+    //translation stuff
+    
+    void    increase_move_speed( boolean current );
+    void    decrease_move_speed( boolean current );
+    void    move_to_goal( boolean speedy );
+    
+};

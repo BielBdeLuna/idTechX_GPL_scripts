@@ -1,17 +1,20 @@
 //this file is GPLv3
 
+#include "script/ai/globals/ai_base.globals"
 #include "script/ai/globals/bipped_base.globals"
-#include "script/ai/subs/subs.script"
+#include "script/ai/subs/ai_subs.script"
 
-//FSM
+//objects
 #include "script/ai/character.script"
 #include "script/ai/npc.script" // this shouldn't be separated from the base?
 
-//bipped
-#include "script/ai/bipped.script"
+#include "script/ai/bipped_base.script"
+#include "script/ai/bipped_init.script"
+#include "script/ai/bipped_effects.script"
+/*
+//FSM
 #include "script/ai/bipped_states.script"
 #include "script/ai/bipped_path.script"
 #include "script/ai/bipped_animation_torso.script"
 #include "script/ai/bipped_animation_legs.script"
-#include "script/ai/bipped_effects.script"
-
+*/
